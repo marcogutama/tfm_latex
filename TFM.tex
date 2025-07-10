@@ -1,0 +1,73 @@
+\documentclass{formato/UNIR}
+\usepackage{pdfpages}
+%--- Parametros de entrada ---%
+\titulo{Detección y mitigación de vulnerabilidades en microservicios Java mediante la integración de IA en pipelines CI/CD}
+\autor{Marco Paúl Gutama Morocho \\
+\hspace{3.35cm}Jonnathan Esteban Peñaranda Sarmiento}
+\director{Dr. Oscar Sanjuan Martinez}
+\fecha{[Fecha de Entrega]}
+\ciudad{Logroño}
+\universidad{Universidad Internacional de la Rioja (UNIR)}
+\escuela{Escuela Superior de Ingeniería y Tecnología}
+\master{Máster Universitario en Desarrollo y Operaciones (DevOps)}
+\tipoTesis{Trabajo Fin de Máster}
+
+\keywords{Palabrasclave} %Keywords en ingles
+\keywordsEs{Palabras, clave} %Palabras clave en español
+
+
+%--- Archivo de configuracion global ---%
+\input{formato/conf}
+
+%---  Compilacion rapida ---%
+% Para ahorrar tiempo de compilacion, comentar las secciones que no se quieran compilar
+% Carácter % en frente de la sección.
+\includeonly{
+  contenido/TFM-00_Abstract,
+  contenido/TFM-01_Introduccion,
+  contenido/TFM-02_Contexto_y_estadodelarte,
+  contenido/TFM-03_Objetivos_y_metodologia,
+  contenido/TFM-04_Desarrollo_contribucion,
+  contenido/TFM-09_Conclusiones_y_trabajo_futuro,
+  contenido/TFM-10_Bibliografia,
+  contenido/TFM-11_Apendice_1,
+%   contenido/TFM-11_Apendice_2 
+}
+
+%---------------------------------------------%
+%           Inicio del documento
+%---------------------------------------------%
+\begin{document}
+    %--- Paginas iniciales: portada,abstract,índice,lista de figuras y lista de tablas ---%. 
+    \frontmatter
+    \pagestyle{frontmatter}
+        \maketitle          % Portada
+
+        \clearpage
+        \include{contenido/TFM-00_Abstract}  %Abtract
+        \tableofcontents    % Índice
+        \listoffigures      % Índice de imagenes
+        \listoftables       % Índice de tablas
+    
+    %---    Cuerpo ---% 
+    \mainmatter
+    
+    \pagestyle{mainmatter}
+        %Incluir aqui todos los capitulos (carpeta contenido)
+        \include{contenido/TFM-00_Abstract}
+        \include{contenido/TFM-01_Introduccion}
+        \include{contenido/TFM-02_Contexto_y_estadodelarte}
+        \include{contenido/TFM-03_Objetivos_y_metodologia}
+        \include{contenido/TFM-04_Desarrollo_contribucion}
+        \include{contenido/TFM-09_Conclusiones_y_trabajo_futuro}
+        \include{contenido/TFM-10_Bibliografia}
+        \include{contenido/TFM-11_Apendice_1}
+
+    %--- Apéndices y bibliografia ---%
+    %\include{contenido/TFM-10_Bibliografia}
+    %%\begin{appendices}
+       % %Incluir aqui todos los apendices (carpeta contenido).
+        %\include{contenido/TFM-11_Apendice_1}
+        %\include{contenido/TFM-11_Apendice_2}
+    %\end{appendices}
+\end{document}

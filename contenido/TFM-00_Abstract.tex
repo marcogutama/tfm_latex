@@ -1,0 +1,33 @@
+\begin{abstract}[Resumen]
+Las prácticas DevOps y las arquitecturas de microservicios aceleran el desarrollo de software, pero introducen desafíos de seguridad, creando una brecha entre la detección de vulnerabilidades y su corrección. Las herramientas tradicionales suelen generar alertas sin contexto, sobrecargando a los desarrolladores y ralentizando la mitigación.
+
+Para resolver esto, se implementó un pipeline de DevSecOps en un entorno reproducible con Docker y Jenkins. La solución, definida como 'Pipeline como Código' en un \texttt{Jenkinsfile}, utiliza un script de Python para consultar una Inteligencia Artificial (IA) que analiza código Java, detecta vulnerabilidades y genera sugerencias de corrección detalladas. Un \texttt{Quality Gate} estricto detiene automáticamente el pipeline si se encuentran fallos críticos, previniendo despliegues inseguros.
+
+La evaluación, realizada sobre una aplicación Java vulnerable, demostró la eficacia del sistema. El prototipo identificó correctamente vulnerabilidades críticas como Inyección SQL y Ejecución Remota de Código, y el \texttt{Quality Gate} detuvo el pipeline como se esperaba, marcando el build como \texttt{FAILURE}.
+
+La principal contribución es la validación de un enfoque de \textbf{asistencia inteligente} para la seguridad. En lugar de una corrección automática riesgosa, el sistema empodera a los desarrolladores con conocimiento accionable para reducir el tiempo medio de remediación (MTTR). Se concluye que esta integración de la IA fomenta una cultura DevSecOps eficaz, transformando la seguridad de un obstáculo a una parte integral del desarrollo.
+
+\par
+\par\vspace{0.25cm}
+\textbf{Palabras clave: } 
+\noindent DevSecOps, CI/CD, Inteligencia Artificial, Análisis de Vulnerabilidades, Jenkins, Microservicios, Seguridad de Aplicaciones.
+\end{abstract}
+
+
+\pagebreak
+%Ingles
+\begin{abstract}
+DevOps practices and microservice architectures accelerate software development but introduce security challenges, creating a gap between vulnerability detection and remediation. Traditional tools often generate context-poor alerts, burdening developers and slowing down mitigation.
+
+To solve this, a DevSecOps pipeline was implemented in a reproducible environment with Docker and Jenkins. The solution, defined as 'Pipeline as Code' in a \texttt{Jenkinsfile}, uses a Python script to query an Artificial Intelligence (AI) model that analyzes Java code, detects vulnerabilities, and generates detailed remediation suggestions. A strict \texttt{Quality Gate} automatically halts the pipeline if critical flaws are found, preventing insecure deployments.
+
+Evaluation on a vulnerable Java application demonstrated the system's effectiveness. The prototype correctly identified critical vulnerabilities like SQL Injection and Remote Code Execution, and the \texttt{Quality Gate} halted the pipeline as expected, marking the build as \texttt{FAILURE}.
+
+The main contribution is the validation of an \textbf{intelligent assistance} approach to security. Instead of risky automated correction, the system empowers developers with actionable knowledge to reduce the Mean Time to Remediate (MTTR). We conclude that this AI integration fosters an effective DevSecOps culture, transforming security from a bottleneck into an integral part of development.
+
+
+\par
+\par\vspace{0.25cm}
+\textbf{Keywords: } 
+\noindent DevSecOps, CI/CD, Artificial Intelligence (AI), Vulnerability Analysis, Application Security, Jenkins, Microservices, Pipeline as Code.
+\end{abstract}

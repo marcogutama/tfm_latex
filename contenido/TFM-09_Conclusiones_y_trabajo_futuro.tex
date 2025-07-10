@@ -1,0 +1,109 @@
+\chapter{Conclusiones y Trabajo Futuro}\label{chap:conclusiones_trabajo_futuro}
+
+Este capítulo final sintetiza los hallazgos y contribuciones de la presente investigación, evalúa el grado de cumplimiento de los objetivos propuestos y establece una visión para futuras líneas de desarrollo que pueden expandir y mejorar el trabajo realizado.
+
+\section{Conclusiones}\label{sec:conclusiones}
+
+La proliferación de arquitecturas de microservicios y la consolidación de las prácticas DevOps han impuesto un ritmo de entrega de software sin precedentes. Sin embargo, esta agilidad a menudo introduce un desafío crítico: la gestión eficaz y oportuna de la seguridad. El problema central abordado en esta tesis fue la brecha existente entre la detección de vulnerabilidades y su efectiva mitigación, un proceso que tradicionalmente recae en el desarrollador y que puede ser lento, propenso a errores y carente del contexto necesario.
+
+Para enfrentar este desafío, el \textbf{objetivo general} de este trabajo fue diseñar, implementar y evaluar un prototipo que integrara la Inteligencia Artificial (IA) en pipelines CI/CD para generar sugerencias de mitigación de vulnerabilidades en microservicios Java. Tras un proceso de desarrollo y evaluación riguroso, se puede afirmar que este objetivo se ha cumplido satisfactoriamente.
+
+El prototipo funcional, orquestado en Jenkins y utilizando un `Jenkinsfile` como pilar del \textit{Pipeline as Code}, ha demostrado la viabilidad de la hipótesis central: es posible automatizar no solo la detección, sino también la generación de orientación para la corrección de fallos de seguridad. A continuación, se detallan las conclusiones en relación con los objetivos específicos:
+
+\begin{enumerate}
+    \item \textbf{Respuesta a los Objetivos Específicos:} Se logró la integración exitosa de herramientas SAST (`SpotBugs`) y SCA (`OWASP Dependency-Check`) en un pipeline de Jenkins. Se seleccionó y se integró un modelo de IA a través de la plataforma `OpenRouter.ai`, lo que proporcionó flexibilidad para evaluar diferentes LLMs. Se desarrolló la lógica de organización en Python, que actúa como el núcleo del sistema, procesando los informes de los escáneres y orquestando las llamadas a la IA. Todo el flujo se automatizó, y se implementó la generación de reportes en HTML, proporcionando una interfaz clara y accionable para el desarrollador. Finalmente, la evaluación del prototipo con un microservicio de prueba validó su efectividad, cumpliendo así con todos los objetivos específicos planteados.
+
+    \item \textbf{Contribución Principal: Asistencia Inteligente sobre Corrección Automática:} La contribución más significativa de este trabajo no es la creación de una herramienta que corrija código de forma autónoma ---una tarea aún arriesgada y compleja---, sino la validación de un enfoque de \textbf{asistencia inteligente}. Al proporcionar sugerencias de mitigación contextualizadas, con ejemplos de código corregido y explicaciones detalladas, el sistema empodera al desarrollador. Se reduce la carga cognitiva, se acelera la curva de aprendizaje en seguridad y se disminuye el tiempo entre la detección y la remediación, fortaleciendo el ciclo DevSecOps.
+
+    \item \textbf{Independencia y Flexibilidad de la Plataforma:} Una decisión de diseño clave fue separar la lógica de análisis del orquestador CI/CD. El análisis de vulnerabilidades y la interacción con la IA se encapsularon en un script de Python independiente. Esto demuestra que, aunque la implementación se realizó en Jenkins, el núcleo de la solución no depende de él. Este componente podría ser integrado con mínima fricción en otros sistemas de CI/CD como GitLab CI/CD, GitHub Actions o ArgoCD, lo que valida su carácter multiplataforma y su adaptabilidad a diversos ecosistemas tecnológicos.
+
+    \item \textbf{Justificación y Contexto del Proyecto:} Este proyecto se ha desarrollado con un enfoque académico y de aprendizaje, buscando explorar las sinergias entre la IA y DevSecOps. No pretende ser una solución comercial superior a las existentes, sino una propuesta de código abierto que puede ser utilizada y adaptada libremente por la comunidad universitaria y de desarrolladores. Su valor radica en la demostración de un enfoque innovador y accesible.
+\end{enumerate}
+
+\subsection{Análisis Comparativo}
+
+Para contextualizar la aportación de esta tesis, se realizó un análisis comparativo entre la solución propuesta y dos herramientas de seguridad reconocidas en la industria: SonarQube y GitHub Advanced Security. Esta comparación permite resaltar las diferencias en filosofía, enfoque y aplicabilidad de cada solución.
+
+\begin{table}[h!]
+\centering
+\caption{Tabla Comparativa: Solución Propuesta vs. Herramientas de Mercado}
+\label{tab:comparativa_sistemas}
+\begin{tabular}{|p{2.6cm}|p{3.9cm}|p{3.9cm}|p{3.9cm}|}
+\hline
+\textbf{Característica} & 
+\textbf{Solución Propuesta (Tesis)} & 
+\textbf{SonarQube (Community Edition)} \cite{sonarqube_editions} & 
+\textbf{GitHub Advanced Security (GHAS)} \cite{ghas_docs} \\ \hline
+
+\textbf{Facilidad de Uso} & 
+Reporte HTML unificado para acción inmediata. & 
+Dashboard completo pero denso. & 
+Integración nativa en GitHub UI (PRs, Security). \\ \hline
+
+\textbf{Coste} & 
+Prácticamente nulo (código abierto y APIs gratuitas). & 
+Gratuito (Community Ed.). Ediciones comerciales con coste. & 
+Incluido en GitHub Enterprise o add-on de pago. Gratuito para repos públicos. \\ \hline
+
+\textbf{Open Source} & 
+Sí, completamente. & 
+Open source (LGPL v3), funciones avanzadas propietarias. & 
+No, producto comercial propietario. \\ \hline
+
+\textbf{Licencia} & 
+Permisiva (ej. MIT). & 
+LGPL v3. & 
+Comercial. \\ \hline
+
+\textbf{Velocidad} & 
+Rápido. IA añade segundos/minutos al pipeline. & 
+Rápido, depende de infraestructura gestionada. & 
+Rápido, optimizado por GitHub. \\ \hline
+
+\textbf{Infraestructura} & 
+Contenedor Docker ligero. Sin servidor dedicado. & 
+Requiere servidor SonarQube persistente con BD. & 
+Totalmente gestionado por GitHub (SaaS). \\ \hline
+
+\textbf{Enfoque Principal} & 
+\textbf{Asistencia para mitigación}: genera explicaciones y código de solución. & 
+\textbf{Detección y seguimiento}: identifica bugs y vulnerabilidades. & 
+\textbf{Prevención integrada}: CodeQL (SAST), Secret Scanning, Dependency Review. \\ \hline
+
+\textbf{Inteligencia Artificial} & 
+Componente central para análisis y generación de sugerencias. & 
+Incorporada en ediciones de pago para análisis avanzado. & 
+Usada para Secret Scanning y Copilot Autofix. \\ \hline
+
+\end{tabular}
+\end{table}
+
+
+El análisis comparativo de la Tabla \ref{tab:comparativa_sistemas} revela que las tres herramientas operan con filosofías distintas. 
+\begin{itemize}
+    \item \textbf{SonarQube} se posiciona como una plataforma centralizada de gobernanza de la calidad y seguridad del código. Su fortaleza radica en ofrecer un panel de control exhaustivo para gestionar la deuda técnica y seguir la evolución de un proyecto a lo largo del tiempo.
+    \item \textbf{GitHub Advanced Security} se enfoca en la prevención temprana, integrándose de manera nativa y fluida en el flujo de trabajo del desarrollador dentro de GitHub. Su objetivo es evitar que las vulnerabilidades lleguen a la base de código principal, proporcionando retroalimentación directamente en las Pull Requests.
+    \item La \textbf{solución de esta tesis}, en cambio, no busca competir en la detección exhaustiva ni en la integración con la plataforma de un proveedor específico. Su nicho y principal innovación residen en el paso \textit{posterior} a la detección: el uso explícito de la IA generativa para \textbf{acelerar la corrección humana}. Actúa como un complemento, un "traductor" inteligente que convierte un reporte de vulnerabilidad en una explicación clara y una solución tangible, reduciendo la fricción y la carga cognitiva del desarrollador.
+\end{itemize}
+
+En resumen, mientras las herramientas comerciales se centran en la detección y prevención, este trabajo explora el potencial de la IA para democratizar y acelerar la fase de mitigación, un área con un significativo potencial de mejora.
+
+\section{Líneas de Trabajo Futuro}\label{sec:trabajofuturo}
+
+El prototipo desarrollado sienta una base sólida sobre la cual se pueden construir numerosas mejoras y extensiones. A continuación, se proponen varias líneas de trabajo futuro que podrían aportar un valor considerable:
+
+\begin{enumerate}
+    \item \textbf{Expansión a Análisis Dinámico (DAST) e Interactivo (IAST):} Actualmente, el sistema se basa en análisis estático (SAST). Una mejora natural sería integrar los resultados de herramientas DAST (como OWASP ZAP) o IAST. Esto permitiría a la IA recibir un contexto de ejecución, como trazas de peticiones HTTP, para generar sugerencias aún más precisas, especialmente para vulnerabilidades que solo se manifiestan en tiempo de ejecución.
+
+    \item \textbf{Integración con Sistemas de Gestión de Incidencias:} Para cerrar completamente el ciclo DevSecOps, el sistema podría integrarse con herramientas como Jira o GitLab Issues. Tras detectar una vulnerabilidad y generar una sugerencia, podría crear automáticamente un ticket asignado al equipo correspondiente, incluyendo toda la información relevante (descripción, severidad, fichero, línea y la sugerencia de la IA).
+
+    \item \textbf{Análisis de Múltiples Microservicios y Vulnerabilidades Inter-servicio:} El estudio se centró en un único microservicio. Un desafío mucho más complejo, pero de gran valor, sería analizar las interacciones entre múltiples microservicios para detectar vulnerabilidades que emergen de la comunicación entre ellos (ej. problemas de autenticación/autorización en cadena, propagación de datos no sanitizados).
+
+    \item \textbf{Afinamiento de Modelos de IA (Fine-Tuning):} En lugar de utilizar modelos de propósito general, se podría realizar un \textit{fine-tuning} de un modelo de código abierto (como Llama 3 o CodeLlama) con un dataset específico de vulnerabilidades y sus correcciones. Esto podría resultar en un modelo más pequeño, rápido y especializado, con una precisión aún mayor para esta tarea concreta.
+
+    \item \textbf{Mecanismos de Retroalimentación y Aprendizaje Continuo:} Se podría añadir una funcionalidad en el reporte HTML para que los desarrolladores califiquen la utilidad de las sugerencias de la IA (`útil` / `no útil`). Esta retroalimentación podría ser recolectada y utilizada para re-entrenar o ajustar el modelo periódicamente, creando un sistema que aprende y mejora con el tiempo.
+
+    \item \textbf{Soporte para más Lenguajes y Ecosistemas:} La arquitectura es modular, por lo que podría extenderse para soportar otros lenguajes de programación (como Python, Node.js, Go) y sus respectivas herramientas de análisis de seguridad, ampliando significativamente el impacto y la aplicabilidad del proyecto.
+\end{enumerate}
+
+En conclusión, esta tesis ha demostrado que la sinergia entre la automatización de DevOps y la capacidad cognitiva de la Inteligencia Artificial ofrece un camino prometedor para construir software más seguro de manera más eficiente. El trabajo futuro en esta área es vasto y emocionante, con el potencial de transformar fundamentalmente la forma en que abordamos la seguridad en el ciclo de vida del desarrollo de software.
