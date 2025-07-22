@@ -1,4 +1,4 @@
-\chapter{Contexto y estado del arte}\label{chap:contexto_estado_arte} % Cambiado el label para evitar duplicidad con el de Objetivos
+\chapter{Contexto y estado del arte}\label{chap:contexto_estado_arte}
 Este capítulo se dedica a establecer un entendimiento profundo del dominio en el que se enmarca la tesis, proporcionando el contexto necesario para apreciar la relevancia y la innovación de la propuesta. Se exploran los conceptos fundamentales de microservicios, CI/CD y seguridad en Java, y se realiza un análisis crítico de las soluciones existentes y la investigación académica relacionada, identificando las brechas que este trabajo pretende abordar.
 
 \section{Contextualización y antecedentes}\label{sec:contextyantec}
@@ -9,71 +9,58 @@ Al mismo tiempo, los pipelines de CI/CD (Integración Continua y Despliegue/Entr
 Java, junto con frameworks como Spring Boot, continúa siendo una tecnología destacada para el desarrollo de microservicios empresariales \cite{FiniteState2023JavaVulnerabilities}. No obstante, las aplicaciones Java pueden tener diversas vulnerabilidades, como las que se detallan en el proyecto OWASP Top Ten, que incluyen inyecciones, configuraciones de seguridad incorrectas y el uso de componentes con vulnerabilidades conocidas \cite{OWASP2021TopTen}. Para asegurar los microservicios Java se requiere no solo conocimiento del lenguaje, sino también de patrones de seguridad específicos para sistemas distribuidos y una gestión cuidadosa de las dependencias \cite{FiniteState2023JavaVulnerabilities, OWASP2021TopTen}.
 
 \section{Trabajos relacionados}\label{sec:trabajos_relacionados}
-La seguridad del software en los flujos de DevOps ha impulsado la creación de diversas herramientas e investigaciones:
+La seguridad del software en los flujos de DevOps ha impulsado la creación de diversas herramientas e investigaciones.
 
-\subsection{Herramientas de Análisis de Seguridad en CI/CD}
+\subsection{Herramientas de Análisis de Seguridad y el Factor Humano}
 La integración de herramientas de Application Security Testing (AST) es una práctica común en DevSecOps \cite{Kumar2022DevSecOpsReview}. Estas herramientas se categorizan principalmente en:
 
 \begin{itemize}
-    \item \textbf{SAST (Static Application Security Testing):} 
+    \item \textbf{SAST (Static Application Security Testing):}
     \begin{itemize}
-        \item Herramientas como SonarQube analizan el código fuente para encontrar patrones de vulnerabilidad \cite{SonarSourceDocSonarQube}.
-        \item SonarQube es reconocido por su análisis de calidad y seguridad y su integración en CI/CD \cite{SonarSourceDocSonarQube}.
-        \item Limitaciones: Las herramientas SAST en general pueden generar falsos positivos y no siempre consideran el contexto de ejecución \cite{Kumar2022DevSecOpsReview}.
+        \item \textit{Descripción:} Analizan el código fuente o binario en busca de patrones de vulnerabilidad sin ejecutar la aplicación.
+        \item \textit{Ejemplos:} SonarQube, Checkmarx, Veracode \cite{SonarSourceDocSonarQube}.
+        \item \textit{Limitaciones:} Aunque son eficaces para la detección temprana, a menudo generan un alto volumen de falsos positivos y carecen del contexto de ejecución, lo que puede llevar a la fatiga de alertas \cite{Johnson2023UsabilitySAST}.
     \end{itemize}
     
     \item \textbf{DAST (Dynamic Application Security Testing):}
     \begin{itemize}
-        \item Herramientas como OWASP ZAP evalúan la aplicación mientras se está ejecutando.
-        \item Estas complementan a SAST, pero necesitan que la aplicación esté desplegada \cite{Kumar2022DevSecOpsReview}.
+        \item \textit{Descripción:} Evalúan la aplicación mientras se está ejecutando, simulando ataques externos para encontrar vulnerabilidades en tiempo de ejecución.
+        \item \textit{Ejemplos:} OWASP ZAP, Burp Suite.
+        \item \textit{Limitaciones:} Requieren que la aplicación esté desplegada y funcional, por lo que la retroalimentación llega más tarde en el ciclo de vida. No tienen visibilidad del código fuente \cite{Kumar2022DevSecOpsReview}.
     \end{itemize}
     
     \item \textbf{SCA (Software Composition Analysis):}
     \begin{itemize}
-        \item Herramientas como Snyk se enfocan en identificar vulnerabilidades en dependencias de terceros \cite{SnykDoc}.
-        \item Snyk se integra en los procesos de desarrollo para escanear y gestionar estas vulnerabilidades \cite{SnykDoc}.
-        \item Este enfoque es crucial dado que las dependencias constituyen un vector de ataque importante.
+        \item \textit{Descripción:} Se enfocan exclusivamente en identificar vulnerabilidades en las dependencias y componentes de terceros utilizados en un proyecto.
+        \item \textit{Ejemplos:} Snyk, OWASP Dependency-Check, Dependabot \cite{SnykDoc}.
+        \item \textit{Limitaciones:} Su alcance no cubre las vulnerabilidades en el código escrito a medida por los desarrolladores.
     \end{itemize}
 \end{itemize}
 
-\textbf{Limitación Común Persistente:} Aunque son cruciales para la detección, estas herramientas frecuentemente ofrecen un soporte limitado para proponer mitigaciones específicas y contextualizadas, dejando la tarea de corrección principalmente al desarrollador \cite{Kumar2022DevSecOpsReview}.
+\subsubsection{El Desafío de la Carga Cognitiva y la Fatiga por Alertas}
+Una limitación persistente y crítica de las herramientas AST tradicionales, especialmente las de tipo SAST, no es solo técnica, sino también humana. Estos sistemas a menudo carecen de una comprensión semántica profunda del código, lo que les lleva a generar un gran número de hallazgos que no son explotables en el contexto real de la aplicación (falsos positivos). Este flujo constante de alertas de baja calidad impone una carga cognitiva significativa sobre los desarrolladores \cite{Johnson2023UsabilitySAST}.
+
+La investigación en ingeniería de software ha demostrado que los desarrolladores, al igual que otros profesionales, sufren de "fatiga por alertas", un estado en el que la exposición continua a notificaciones irrelevantes les lleva a ignorar o desconfiar de todas las alertas, incluidas las críticas. El proceso de triaje —investigar cada alerta para determinar su validez— es costoso en tiempo y esfuerzo, y se asemeja a la "búsqueda de información" (information foraging), donde el desarrollador debe decidir si el "aroma" de una alerta justifica el "coste" de investigarla a fondo \cite{Parnin2011InformationForaging}. Cuando la mayoría de las alertas resultan ser falsos positivos, la confianza en la herramienta disminuye y la postura de seguridad de la organización se debilita. Por lo tanto, el problema no es solo detectar vulnerabilidades, sino presentarlas de una manera que sea procesable, contextualizada y que minimice la carga cognitiva, un vacío que las herramientas tradicionales luchan por llenar.
 
 \subsection{Aplicaciones de Inteligencia Artificial en Ingeniería de Software y Seguridad}
+La IA, y en particular los LLMs, ha surgido como una tecnología prometedora para abordar las limitaciones de las herramientas tradicionales.
 
+\subsubsection{Evolución de los Modelos de Lenguaje para Código}
+El uso de la IA para analizar código no es nuevo, pero ha evolucionado drásticamente. Los primeros enfoques utilizaban modelos especializados entrenados en vocabularios de código, como CodeBERT, que aprendían representaciones de lenguajes de programación para tareas como la búsqueda de código o la detección de vulnerabilidades \cite{6}. Sin embargo, el avance más significativo ha venido con la aparición de LLMs de propósito general a gran escala, como los de las familias GPT, Llama, Claude y Gemini. Estos modelos, entrenados con vastos corpus de texto y código, han demostrado capacidades emergentes para razonar sobre la semántica del código, su intención y sus posibles fallos, a menudo superando a los modelos especializados anteriores \cite{Siddiq2024LLMSurvey}. Herramientas como GitHub Copilot, basadas en estos modelos, han popularizado la generación y el análisis de código asistido por IA \cite{GitHubCopilotFeatures, Wang2022CopilotSecurity}.
+
+\subsubsection{IA para la Detección y Reparación de Vulnerabilidades}
+La investigación actual explora activamente el uso de LLMs para la seguridad del software, aunque con diferentes enfoques:
 \begin{itemize}
-    \item \textbf{Modelos de Lenguaje Grandes (LLMs) para Código:} 
-    \begin{itemize}
-        \item Modelos como los que utiliza GitHub Copilot han mostrado capacidad para comprender y generar código \cite{GitHubCopilotFeatures, Wang2022CopilotSecurity}.
-        \item La investigación explora su potencial para identificar código inseguro y sugerir formas de corregirlo \cite{Wang2022CopilotSecurity}.
-        \item Preocupaciones: La seguridad del código generado por LLMs es un área de estudio activa, ya que podrían introducir vulnerabilidades o filtrar información sensible \cite{GitGuardian2025CopilotConcerns}.
-    \end{itemize}
+    \item \textbf{Detección Mejorada:} Se utilizan LLMs para mejorar la precisión de la detección de vulnerabilidades, intentando reducir los falsos positivos al comprender mejor el contexto del código \cite{GitHubAICodeReviews}. Sin embargo, la seguridad del propio código generado por LLMs sigue siendo un área de preocupación y estudio activo \cite{GitGuardian2025CopilotConcerns}.
     
-    \item \textbf{IA para Detección de Vulnerabilidades:}
-    \begin{itemize}
-        \item La IA se usa para el análisis de código, con la capacidad de identificar patrones complejos y clasificar cambios según su impacto en la seguridad \cite{GitHubAICodeReviews}.
-        \item Estas herramientas buscan mejorar la detección temprana de riesgos \cite{GitHubAICodeReviews}.
-    \end{itemize}
+    \item \textbf{Reparación Automática de Programas (APR):} Este es uno de los campos más ambiciosos, donde el objetivo es que la IA genere automáticamente un parche que corrija un error o una vulnerabilidad. Aunque se han logrado avances significativos y los LLMs superan a menudo a las técnicas de APR tradicionales \cite{Liu2024APRSurvey}, la fiabilidad y la corrección semántica de los parches generados siguen siendo un desafío. Un parche puede corregir una vulnerabilidad pero introducir otra, o romper la funcionalidad existente \cite{Fu2023Patching}. Estas limitaciones de confianza restringen severamente su adopción en entornos de producción críticos.
     
-    \item \textbf{IA para Reparación Automática de Programas (APR):}
-    \begin{itemize}
-        \item Este campo tiene como objetivo generar parches de forma automática.
-        \item Aunque hay avances, especialmente con técnicas basadas en aprendizaje profundo (Deep Learning), la fiabilidad y corrección semántica de los parches generados sigue siendo un desafío importante.
-        \item Estas limitaciones restringen su adopción en entornos de producción \cite{Liu2024APRSurvey}.
-    \end{itemize}
-    
-    \item \textbf{Integración de IA en DevOps (AIOps y DevSecOps Inteligente):}
-    \begin{itemize}
-        \item AIOps busca aplicar IA para mejorar las operaciones de TI y DevOps, incluyendo la optimización de pipelines y la detección de anomalías \cite{Iglesia2021AIOps}.
-        \item La aplicación específica de IA dentro de DevSecOps para ayudar en la mitigación de vulnerabilidades, como se propone en esta tesis, es una extensión de esta tendencia.
-        \item Su objetivo es cerrar la brecha entre la detección y la corrección efectiva \cite{Myrbakken2019DevSecOpsSLR, Kumar2022DevSecOpsReview}.
-    \end{itemize}
+    \item \textbf{Integración en DevOps (AIOps):} A un nivel más amplio, AIOps busca aplicar la IA para optimizar las operaciones de TI y los flujos de DevOps, como la detección de anomalías en logs o la optimización de la configuración de pipelines \cite{Iglesia2021AIOps}.
 \end{itemize}
 
-\section{Conclusiones del estado del arte}\label{sec:conclusionesSOTA}
-El análisis del contexto y los trabajos relacionados muestra que, si bien las herramientas de DevSecOps han mejorado la detección automatizada de vulnerabilidades (SAST, DAST, SCA) \cite{Kumar2022DevSecOpsReview, SonarSourceDocSonarQube, SnykDoc}, todavía existe una brecha importante en la fase de mitigación eficiente y precisa. La tarea de interpretar los hallazgos y desarrollar correcciones adecuadas sigue siendo, en gran medida, manual.
+\section{Conclusiones del estado del arte e Identificación de la Brecha}\label{sec:conclusionesSOTA}
+El análisis del estado del arte revela dos realidades paralelas. Por un lado, las herramientas de DevSecOps tradicionales (SAST, DAST, SCA) son maduras y efectivas en la \textit{detección}, pero fallan en el aspecto humano: abruman a los desarrolladores con alertas de bajo contexto, creando una barrera para la \textit{mitigación} eficiente \cite{Johnson2023UsabilitySAST}. Por otro lado, los avances en IA y LLMs ofrecen un enorme potencial para comprender y razonar sobre el código, pero la investigación se ha polarizado en dos extremos: la mejora de la detección y la utopía de la reparación totalmente automática (APR), cuya fiabilidad aún no es adecuada para entornos de producción \cite{Liu2024APRSurvey}.
 
-Por otro lado, los avances en Inteligencia Artificial, especialmente en LLMs aplicados a código \cite{GitHubCopilotFeatures, Wang2022CopilotSecurity}, ofrecen un potencial prometedor para ayudar en tareas cognitivas complejas, como el análisis de código y la sugerencia de correcciones. No obstante, la integración efectiva de estas capacidades de IA en los pipelines CI/CD —específicamente para generar sugerencias de mitigación contextualizadas para vulnerabilidades en microservicios Java y que complementen las herramientas de detección existentes— es un área que todavía necesita considerable exploración y desarrollo. La investigación actual en IA y seguridad a menudo se centra en mejorar la detección \cite{GitHubAICodeReviews} o en la reparación automática experimental (APR) \cite{Liu2024APRSurvey}. Sin embargo, el paso intermedio de asistencia inteligente para la mitigación en un contexto práctico de DevSecOps está menos desarrollado.
+En esta intersección se encuentra la \textbf{brecha investigadora} que esta tesis aborda: el espacio intermedio de la \textbf{asistencia inteligente para la mitigación}. Existe una necesidad clara de un enfoque que aproveche el poder de razonamiento de los LLMs no para reemplazar al desarrollador, sino para empoderarlo. Un sistema que, integrado en el pipeline CI/CD, actúe como un experto en seguridad virtual, traduciendo las alertas de bajo nivel de las herramientas SAST en sugerencias de corrección de alto nivel, contextualizadas y explicadas.
 
-La principal contribución y novedad de esta tesis consiste en abordar esta brecha. Se propone un sistema que utiliza la información de herramientas de análisis de seguridad estándar como entrada para modelos de IA, con el fin de generar sugerencias de mitigación específicas. Este enfoque de asistencia inteligente, integrado en el pipeline CI/CD, busca dar a los desarrolladores retroalimentación útil y aplicable, en lugar de intentar una arriesgada corrección automática. Esto se alinea con las necesidades de control y seguridad en entornos de producción y con las directrices de seguridad para cadenas de suministro de software y CI/CD, como las propuestas por NIST \cite{NIST2024CICDSecurity}.
-
-Este enfoque tiene como meta mejorar la eficiencia del ciclo DevSecOps, reducir el tiempo necesario para corregir vulnerabilidades y contribuir a la creación de software más seguro sin sacrificar la agilidad del desarrollo, un desafío constante en la ingeniería de software moderna \cite{Laukkanen2017BenefitsChallengesCICD, Myrbakken2019DevSecOpsSLR}.
+La principal contribución y novedad de esta tesis es, por tanto, el diseño, la implementación y la evaluación de un sistema que ocupa este nicho. A diferencia de los sistemas APR, no intenta una arriesgada corrección automática, sino que se centra en generar retroalimentación accionable que respete el control y la supervisión del desarrollador. Este enfoque se alinea con las necesidades de control y seguridad en entornos de producción y con las directrices de seguridad para cadenas de suministro de software, como las propuestas por NIST \cite{NIST2024CICDSecurity}, y busca mejorar la eficiencia del ciclo DevSecOps sin sacrificar la agilidad del desarrollo \cite{Laukkanen2017BenefitsChallengesCICD, Myrbakken2019DevSecOpsSLR}.
