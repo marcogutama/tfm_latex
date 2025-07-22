@@ -619,15 +619,15 @@ De esta manera, la clave nunca es visible en el código y está protegida por Je
 
 \section{Evaluación}
 \label{sec:evaluacion}
-Para evaluar la eficacia de la integración de la inteligencia artificial en la detección de vulnerabilidades y mejora de la calidad del código, se ha utilizado un microservicio de ejemplo en Java (alojado en el repositorio \url{https://github.com/iJonnathan/TFM/tree/main/demo}), diseñado a propósito con múltiples fallos de seguridad. Este código fue analizado tanto por los modelos de IA como por SonarQube Community Edition, que actúa como herramienta de referencia.
+Para evaluar la eficacia de la integración de la inteligencia artificial en la detección de vulnerabilidades y mejora de la calidad del código, se ha utilizado un microservicio de ejemplo en Java (alojado en el repositorio \url{https://github.com/iJonnathan/TFM/tree/main/demo}), diseñado a propósito con múltiples fallos de seguridad. Este código fue analizado tanto por los modelos de IA como por dos herramientas de referencia que representan el estándar industrial: SonarQube y Snyk.
 
 \subsection{Entorno de Pruebas y Análisis de Vulnerabilidades}
 
-El componente central para la evaluación es el controlador \texttt{WelcomeController.java}, que contiene una variedad de vulnerabilidades clásicas para medir la capacidad de detección de las herramientas.
+El componente central para la evaluación es el controlador \texttt{WelcomeController.java} y el fichero \texttt{pom.xml} del proyecto, que contienen un conjunto de vulnerabilidades clásicas para medir la capacidad de detección de las herramientas.
 
 \subsubsection{Análisis Detallado de Vulnerabilidades Introducidas}
 
-Para realizar una evaluación controlada, el microservicio de prueba fue deliberadamente instrumentado con un conjunto de 12 vulnerabilidades, representativas de las categorías más comunes del OWASP Top 10. A continuación, se detalla cada una de ellas:
+Para realizar una evaluación controlada, el microservicio de prueba fue deliberadamente instrumentado con un conjunto de 13 vulnerabilidades, representativas de las categorías más comunes del OWASP Top 10. A continuación, se detalla cada una de ellas:
 
 \textbf{1. Clave Secreta Embebida en el Código (CWE-798):} Se han incluido credenciales directamente en el código fuente.
 \begin{lstlisting}[language=java, caption={Claves secretas hardcodeadas.}]
@@ -747,9 +747,9 @@ public String error() {
 
 \subsection{Modelos y Herramientas de Análisis}
 
-Para llevar a cabo una evaluación exhaustiva y comparativa, se seleccionó un conjunto de modelos de Inteligencia Artificial de vanguardia, todos accesibles a través de la plataforma OpenRouter.ai, junto con una herramienta de análisis estático de código que sirve como referencia.
+Para llevar a cabo una evaluación exhaustiva y comparativa, se seleccionó un conjunto de modelos de IA de vanguardia y dos herramientas de referencia líderes en la industria.
 
-Los modelos de IA seleccionados, todos disponibles en la capa gratuita de OpenRouter, fueron:
+Los modelos de IA, todos accesibles a través de la plataforma OpenRouter, fueron:
 \begin{itemize}
     \item \textbf{google/gemini-2.0-flash-exp:free}: Un modelo de última generación de Google, conocido por su velocidad y capacidades multimodales.
     \item \textbf{deepseek/deepseek-chat:free}: Un modelo de DeepSeek AI especializado y afinado para tareas de conversación y codificación.
@@ -757,20 +757,17 @@ Los modelos de IA seleccionados, todos disponibles en la capa gratuita de OpenRo
     \item \textbf{qwen/qwen-2.5-coder-32b-instruct:free}: Un modelo de Qwen (Alibaba) especializado en código.
 \end{itemize}
 
-Como herramienta de referencia, se utilizó:
+\paragraph{Herramientas de Referencia (Baselines).}
 \begin{itemize}
-    \item \textbf{SonarQube Community Edition 9.9}: Una de las herramientas de análisis estático de la calidad y seguridad del código (SAST) más reconocidas y utilizadas en la industria. Su función en esta evaluación es establecer una línea base de los hallazgos que una herramienta SAST tradicional y gratuita puede identificar.
+\item \textbf{SonarQube Community Edition 9.9}: Representa la línea base para el Análisis Estático de Seguridad de
+Aplicaciones (SAST) y la calidad del código. Es una de las herramientas más utilizadas en la industria para el análisis del código fuente propio.
+\item \textbf{Snyk Open Source}: Representa la línea base para el Análisis de Composición de Software (SCA). Se utilizó la funcionalidad disponible en su plan gratuito, que se enfoca en detectar vulnerabilidades en dependencias de terceros. Es pertinente mencionar que Snyk también ofrece una solución SAST comercial (\textit{Snyk Code}), pero sus capacidades completas forman parte de sus planes de pago y no fueron objeto de esta evaluación \cite{snyk_plans}.
 \end{itemize}
-
-La elección de esta combinación de herramientas permite una comparación multifacética: por un lado, la capacidad de los modelos de IA para comprender el contexto y la semántica del código en la detección de vulnerabilidades complejas; por otro, la eficacia de SonarQube en la aplicación de un conjunto de reglas estáticas y bien definidas para la calidad y mantenibilidad del código.
 
 \subsection{Análisis Comparativo de Resultados}
 \label{subsec:analisis_comparativo_resultados}
-Cada modelo de IA y la herramienta de referencia (SonarQube) analizaron el código fuente que contenía un conjunto de vulnerabilidades deliberadamente introducidas. Para ofrecer una visión granular del rendimiento de cada herramienta, la siguiente tabla detalla la detección de cada vulnerabilidad específica.
+Cada modelo de IA y las herramientas de referencia analizaron el proyecto. La siguiente tabla detalla la detección de cada vulnerabilidad específica.
 
-% Se requiere el paquete \usepackage{amssymb} para \checkmark
-% Se requiere el paquete \usepackage{pifont} para \ding{55}
-% Se requiere el paquete \usepackage{xcolor} para los colores
 \newcommand{\cmark}{{\color{green!80!black}\checkmark}}%
 \newcommand{\xmark}{{\color{red!80!black}\ding{55}}}%
 
@@ -779,40 +776,41 @@ Cada modelo de IA y la herramienta de referencia (SonarQube) analizaron el códi
 \caption{Detección Detallada de Vulnerabilidades por Herramienta}
 \label{tab:comparativa_detallada}
 \resizebox{\textwidth}{!}{%
-\begin{tabular}{|l|c|c|c|c|c|}
+\begin{tabular}{|l|c|c|c|c|c|c|}
 \hline
-\textbf{Vulnerabilidad} & \textbf{SonarQube} & \textbf{Gemini 2.0} & \textbf{DS Chat} & \textbf{DS R1} & \textbf{Qwen 2.5} \\
+\textbf{Vulnerabilidad} & \textbf{SonarQube} & \textbf{Snyk (Free)} & \textbf{Gemini 2.0} & \textbf{DS Chat} & \textbf{DS R1} &
+\textbf{Qwen 2.5} \\
 \hline
-Hardcoded Secret (Password) & \cmark & \cmark & \cmark & \cmark & \cmark \\
+Hardcoded Secret (Password) & \cmark & N/A & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Hardcoded Secret (API Key) & \cmark & \cmark & \cmark & \cmark & \cmark \\
+Hardcoded Secret (API Key) & \cmark & N/A & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Cross-Site Scripting (XSS) & \xmark & \cmark & \cmark & \cmark & \cmark \\
+Cross-Site Scripting (XSS) & \xmark & N/A & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Remote Code Execution (RCE) & \xmark & \cmark & \cmark & \cmark & \cmark \\
+Remote Code Execution (RCE) & \xmark & N/A & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Path Traversal & \xmark & \cmark & \cmark & \cmark & \cmark \\
+Path Traversal & \xmark & N/A & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Inyección SQL (SQLi) & \xmark & \cmark & \cmark & \cmark & \cmark \\
+Inyección SQL (SQLi) & \xmark & N/A & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Inyección de Comandos & \xmark & \cmark & \cmark & \cmark & \cmark \\
+Inyección de Comandos & \xmark & N/A & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Deserialización Insegura & \xmark & \cmark & \cmark & \cmark & \cmark \\
+Deserialización Insegura & \xmark & N/A & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Logs con Datos Sensibles & \xmark & \cmark & \cmark & \cmark & \cmark \\
+Logs con Datos Sensibles & \xmark & N/A & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Uso de Criptografía Débil (Hash) & \xmark & \cmark & \cmark & \cmark & \cmark \\
+Uso de Criptografía Débil (Hash) & \xmark & N/A & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Cifrado Simétrico Débil & \cmark & \cmark & \cmark & \cmark & \cmark \\
+Cifrado Simétrico Débil & \cmark & N/A & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Exposición de Error (Stacktrace) & \xmark & \cmark & \cmark & \cmark & \cmark \\
+Exposición de Error (Stacktrace) & \xmark & N/A & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Dependencia Vulnerable (pom.xml) & \xmark & \cmark & \cmark & \cmark & \cmark \\
+Dependencia Vulnerable (pom.xml) & \xmark & \cmark & \cmark & \cmark & \cmark & \cmark \\
 \hline
 \hline
-\textbf{Total Detectadas} & \textbf{3 / 13} & \textbf{13 / 13} & \textbf{13 / 13} & \textbf{13 / 13} & \textbf{13 / 13} \\
+\textbf{Total Código Fuente (12)} & 3 & N/A & 12 & 12 & 12 & 12 \\
 \hline
-\textbf{Cobertura} & \textbf{23\%} & \textbf{100\%} & \textbf{100\%} & \textbf{100\%} & \textbf{100\%} \\
+\textbf{Total Dependencias (1)} & 0 & 1 & 1 & 1 & 1 & 1 \\
 \hline
 \end{tabular}%
 }
@@ -916,9 +914,13 @@ Este análisis cuantitativo es fundamental para la toma de decisiones en un ento
 Del análisis detallado de los resultados, se extraen las siguientes observaciones clave:
 
 \begin{itemize}
-    \item \textbf{Rendimiento de SonarQube}: La edición comunitaria de SonarQube, aunque excelente para la calidad del código, demostró una capacidad de detección de vulnerabilidades muy limitada, identificando solo 3 de las 13 (23\%). Sus detecciones se centraron en patrones muy específicos y evidentes: las dos credenciales embebidas y el uso de un modo de cifrado inseguro. Falló en todas las vulnerabilidades que requerían una comprensión del flujo de datos y del contexto de la aplicación, como SQLi, XSS, RCE y la dependencia vulnerable en el \texttt{pom.xml}.
+    \item \textbf{Rendimiento de las Herramientas de Referencia (Baselines)}: Las herramientas especializadas demostraron ser eficaces en sus respectivos dominios, pero limitadas fuera de ellos.
+        \begin{itemize}
+            \item \textbf{SonarQube (SAST)}: Detectó 3 de las 12 vulnerabilidades presentes en el código fuente, enfocándose en patrones evidentes como las claves embebidas. Sin embargo, no identificó ninguna vulnerabilidad contextual (SQLi, XSS) ni la dependencia vulnerable en el \texttt{pom.xml}.
+            \item \textbf{Snyk (SCA)}: Como se esperaba de una herramienta SCA líder, identificó con éxito la dependencia vulnerable en el \texttt{pom.xml} (`jackson-databind`), proporcionando un listado exhaustivo de los 58 problemas de seguridad asociados a esa única dependencia. No obstante, su alcance no cubre el análisis del código fuente propio.
+        \end{itemize}
 
-    \item \textbf{Rendimiento Sobresaliente de los Modelos de IA}: El hallazgo más significativo de esta evaluación es que \textbf{todos los modelos de IA probados alcanzaron una cobertura de detección del 100\%}, identificando la totalidad de las 13 vulnerabilidades introducidas. Esto incluye no solo los fallos en el código Java, sino también la dependencia vulnerable declarada en el archivo \texttt{pom.xml}. Este resultado demuestra de manera concluyente que la generación actual de LLMs especializados en código posee una capacidad de análisis semántico y contextual que iguala o supera las capacidades humanas para la revisión de este tipo de fallos, y sobrepasa ampliamente a las herramientas SAST tradicionales y gratuitas.
+    \item \textbf{Rendimiento Holístico de los Modelos de IA}: El hallazgo más significativo es la capacidad de los modelos de IA para realizar un análisis \textbf{híbrido}, cubriendo tanto las responsabilidades de SAST como de SCA con una eficacia del 100\% en el entorno de prueba. Todos los modelos identificaron la totalidad de las 13 vulnerabilidades, demostrando una comprensión contextual del código y una capacidad para analizar las dependencias del proyecto. Esto representa una ventaja fundamental, ya que ofrecen una visión de seguridad unificada que tradicionalmente requeriría la integración de múltiples herramientas especializadas.
 
     \item \textbf{Nuevos Criterios de Diferenciación}: Dado que todos los modelos de IA alcanzaron la máxima puntuación en detección, la diferenciación entre ellos ya no se basa en la cobertura, sino en otros factores cualitativos y cuantitativos:
         \begin{itemize}
