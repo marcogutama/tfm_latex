@@ -11,28 +11,27 @@ Al alcanzar este objetivo, se busca demostrar la viabilidad y el valor de utiliz
 Para lograr el objetivo general de manera estructurada y medible, se establecen los siguientes objetivos específicos:
 
 \begin{itemize}
-    \item \textbf{Identificar y configurar herramientas de análisis de seguridad en CI/CD:} Investigar, seleccionar e integrar al menos una herramienta SAST reconocida (dando prioridad a SonarQube según la propuesta inicial) dentro de un pipeline CI/CD (por ejemplo, GitLab CI/CD, Jenkins). El propósito es establecer la base para la detección de vulnerabilidades en código Java de microservicios de ejemplo, asegurando que la salida de la herramienta sea procesable para el siguiente paso.
+    \item \textbf{Identificar y configurar herramientas de análisis de seguridad en CI/CD:} Investigar, seleccionar e integrar al menos una herramienta SAST reconocida (dando prioridad a SonarQube según la propuesta inicial) dentro de un pipeline CI/CD. El propósito es establecer la base para la detección de vulnerabilidades en código Java de microservicios de ejemplo, asegurando que la salida de la herramienta sea procesable para el siguiente paso.
     
-    \item \textbf{Seleccionar e integrar modelos de IA para análisis de código:} Investigar y evaluar la idoneidad de diferentes modelos de IA existentes (por ejemplo, OpenAI Codex/API de GPT, GitHub Copilot API, modelos de Hugging Face como CodeBERT, opciones vía Ollama) para la tarea específica de analizar fragmentos de código Java marcados como vulnerables y generar sugerencias de corrección. Seleccionar al menos un modelo e implementar la integración técnica (llamadas API, procesamiento de entrada/salida) dentro del pipeline. El objetivo es establecer la capacidad de análisis inteligente.
+    \item \textbf{Seleccionar e integrar modelos de IA para análisis de código:} Investigar y evaluar la idoneidad de diferentes modelos de IA existentes para la tarea específica de analizar fragmentos de código Java marcados como vulnerables y generar sugerencias de corrección. Seleccionar al menos un modelo e implementar la integración técnica (llamadas API, procesamiento de entrada/salida) dentro del pipeline. El objetivo es establecer la capacidad de análisis inteligente.
     
-    \item \textbf{Desarrollar la lógica de organización y generación de sugerencias:} Implementar la lógica de conexión ("integrador") dentro del pipeline que:
+    \item \textbf{Desarrollar la lógica de organización y generación de sugerencias:} Implementar la lógica de conexión dentro del pipeline que:
     \begin{itemize}
-        \item Extraiga la información relevante de la salida de la herramienta SAST (tipo de vulnerabilidad, ubicación del código)
-        \item Prepare y envíe esta información de forma adecuada al modelo de IA seleccionado
-        \item Reciba la respuesta del modelo de IA
-        \item Procese y formatee las sugerencias de mitigación generadas para que sean comprensibles y útiles
+        \item Prepare y envíe las clases y archivos de configuración del proyecto de forma adecuada al modelo de IA seleccionado.
+        \item Reciba la respuesta del modelo de IA.
+        \item Procese y formatee las sugerencias de mitigación generadas para que sean comprensibles y útiles.
     \end{itemize}
     Este es el núcleo de la funcionalidad propuesta.
     
-    \item \textbf{Automatizar el flujo completo en el pipeline CI/CD:} Asegurar que todo el proceso (descarga de código $\rightarrow$ análisis SAST $\rightarrow$ envío a IA $\rightarrow$ recepción de sugerencias $\rightarrow$ generación de reporte) se ejecute de forma automática como parte integral del pipeline CI/CD elegido (por ejemplo, Jenkins, GitLab CI/CD, GitHub Actions). Este proceso se activaría, por ejemplo, en cada commit o merge request. El objetivo es demostrar la integración transparente en el flujo DevOps.
+    \item \textbf{Automatizar el flujo completo en el pipeline CI/CD:} Asegurar que todo el proceso (Descarga de código $\rightarrow$ Compilación $\rightarrow$ Pruebas Unitarias $\rightarrow$ Análisis estático $\rightarrow$ Análisis mediante IA $\rightarrow$ Criterios de calidad $\rightarrow$  Desplieguenla del servicio) se ejecute de forma automática como parte integral del pipeline CI/CD elegido (por ejemplo, Jenkins, GitLab CI/CD, GitHub Actions). Este proceso se activaría, por ejemplo, en cada commit o merge request. El objetivo es demostrar la integración transparente en el flujo DevOps.
     
-    \item \textbf{Implementar la generación de reportes accionables:} Diseñar y desarrollar un mecanismo para generar reportes claros y concisos (por ejemplo, en formato HTML, Markdown o PDF) que presenten las vulnerabilidades detectadas junto con las correspondientes sugerencias de mitigación proporcionadas por la IA. Estos reportes deben ser fácilmente accesibles como artefactos del pipeline para que los desarrolladores puedan revisarlos. El fin es crear un mecanismo de retroalimentación efectivo.
+    \item \textbf{Implementar la generación de reportes accionables:} Diseñar y desarrollar un mecanismo para generar reportes claros y concisos en formato HTML, que presenten las vulnerabilidades detectadas junto con las correspondientes sugerencias de mitigación proporcionadas por la IA. Estos reportes deben ser fácilmente accesibles como artefactos del pipeline para que los desarrolladores puedan revisarlos. El fin es crear un mecanismo de retroalimentación efectivo.
     
     \item \textbf{Evaluar la efectividad y rendimiento del prototipo:} Diseñar y ejecutar un conjunto de experimentos utilizando microservicios Java de ejemplo con vulnerabilidades conocidas. Medir métricas clave como:
     \begin{itemize}
-        \item Tasa de vulnerabilidades detectadas para las cuales se genera una sugerencia
-        \item Precisión y relevancia percibida de las sugerencias (potencialmente mediante evaluación manual o comparación con soluciones expertas)
-        \item Impacto en el tiempo total de ejecución del pipeline
+        \item Tasa de vulnerabilidades detectadas para las cuales se genera una sugerencia.
+        \item Precisión y relevancia percibida de las sugerencias mediante evaluación manual.
+        \item Impacto en el tiempo total de ejecución del pipeline.
     \end{itemize}
     El objetivo es validar la utilidad práctica y la viabilidad de la solución propuesta.
 \end{itemize}
@@ -44,29 +43,29 @@ Para alcanzar los objetivos descritos de manera sistemática y rigurosa, se segu
 \begin{enumerate}
     \item \textbf{Fase 1: Investigación y Selección Tecnológica (Semanas 1-3)}
     \begin{itemize}
-        \item Análisis profundo de vulnerabilidades Java en microservicios: Revisión bibliográfica y análisis de bases de datos de vulnerabilidades (por ejemplo, OWASP Top 10, CWE) para identificar los tipos de fallos de seguridad más comunes y relevantes en el contexto de microservicios Java (tales como inyecciones, configuración insegura de Spring Boot/Jakarta EE, manejo de claves de API, autenticación/autorización distribuida)
-        \item Evaluación y selección de herramientas SAST/CI/CD: Análisis comparativo de herramientas SAST (SonarQube como principal candidato, evaluando alternativas si es necesario) y plataformas CI/CD (GitLab CI/CD, Jenkins, GitHub Actions). Se considerarán criterios como: capacidad de integración, calidad del análisis, formato de salida, comunidad/soporte y disponibilidad (dando prioridad a opciones de código abierto o con licencias académicas/gratuitas viables). Selección final de las herramientas base
-        \item Exploración y selección de modelos de IA: Investigación detallada de modelos de IA (APIs de Codex/GPT, API de Copilot, CodeBERT, otros modelos de Hugging Face, exploración de modelos locales vía Ollama). Se evaluarán aspectos como: capacidad de análisis de Java, calidad de generación de código/sugerencias, facilidad de integración (APIs, librerías), costes, licencias y documentación. Selección del modelo o modelos principales a integrar en el prototipo
+        \item Análisis profundo de vulnerabilidades Java en microservicios: Revisión bibliográfica y análisis de bases de datos de vulnerabilidades (por ejemplo, OWASP Top 10, CWE) para identificar los tipos de fallos de seguridad más comunes y relevantes en el contexto de microservicios Java (tales como inyecciones, configuración insegura de Spring Boot/Jakarta EE, manejo de claves de API, autenticación/autorización distribuida).
+        \item Evaluación y selección de herramientas SAST/CI/CD: Análisis comparativo de herramientas SAST (SonarQube como principal candidato, evaluando alternativas si es necesario) y plataformas CI/CD (GitLab CI/CD, Jenkins, GitHub Actions). Se considerarán criterios como: capacidad de integración, calidad del análisis, formato de salida, comunidad/soporte y disponibilidad (dando prioridad a opciones de código abierto o con licencias académicas/gratuitas viables). Selección final de las herramientas base.
+        \item Exploración y selección de modelos de IA: Investigación detallada de modelos de IA. Se evaluarán aspectos como: capacidad de análisis de Java, calidad de generación de código/sugerencias, facilidad de integración (APIs, librerías), costes, licencias y documentación. Selección del modelo o modelos principales a integrar en el prototipo.
     \end{itemize}
     
     \item \textbf{Fase 2: Diseño de la Arquitectura y Casos de Prueba (Semanas 4-5)}
     \begin{itemize}
-        \item Diseño detallado de la arquitectura: Elaboración de diagramas de arquitectura (despliegue, componentes, flujo de datos) que muestren cómo interactuarán el repositorio de código, el servidor CI/CD, la herramienta SAST, el servicio/modelo de IA y el generador de reportes. Definición de las interfaces de comunicación (APIs, formatos de datos). Se considerarán aspectos como el manejo de errores, la seguridad en la comunicación con la IA (si es externa) y la escalabilidad conceptual
-        \item Definición de casos de prueba: Selección o desarrollo de 1 a 3 microservicios Java simples (por ejemplo, usando Spring Boot o Quarkus) que contengan deliberadamente un conjunto representativo de las vulnerabilidades identificadas en la Fase 1. Estos servirán como base para la implementación y validación. Se documentarán claramente las vulnerabilidades introducidas y su ubicación
+        \item Diseño detallado de la arquitectura: Elaboración de diagramas de arquitectura (despliegue, componentes, flujo de datos) que muestren cómo interactuarán el repositorio de código, el servidor CI/CD, la herramienta SAST, el servicio/modelo de IA y el generador de reportes. Definición de las interfaces de comunicación (APIs, formatos de datos). Se considerarán aspectos como el manejo de errores, la seguridad en la comunicación con la IA (si es externa) y la escalabilidad conceptual.
+        \item Definición de casos de prueba: Desarrollo de un microservicio Java (por ejemplo, usando Spring Boot o Quarkus) que contengan deliberadamente un conjunto representativo de las vulnerabilidades identificadas en la Fase 1. Estos servirán como base para la implementación y validación. Se documentarán claramente las vulnerabilidades introducidas y su ubicación.
     \end{itemize}
     
     \item \textbf{Fase 3: Desarrollo e Implementación del Prototipo (Semanas 6-10)}
     \begin{itemize}
-        \item Configuración del entorno CI/CD y SAST: Puesta en marcha de la plataforma CI/CD seleccionada y configuración del pipeline base para los microservicios de prueba. Integración y configuración de la herramienta SAST elegida (por ejemplo, SonarQube Scanner) para que analice el código en una etapa del pipeline
-        \item Desarrollo del módulo de integración con IA: Creación de los scripts (por ejemplo, en Python, Groovy, o el lenguaje soportado por el CI/CD) que: analicen la salida de la herramienta SAST, identifiquen las secciones de código relevantes, interactúen con el modelo de IA seleccionado (llamadas API, inferencia local si aplica), y manejen las respuestas
-        \item Desarrollo del módulo de generación de reportes: Implementación de la lógica para tomar las vulnerabilidades detectadas y las sugerencias de la IA, y generar un informe consolidado y legible (por ejemplo, HTML con resaltado de código, tablas resumen) que se archive como artefacto del pipeline
-        \item Contenerización (Docker): Empaquetar los microservicios de prueba y, potencialmente, algunos componentes del sistema (si es necesario) usando Docker. Esto asegurará la reproducibilidad y facilitará el despliegue en el entorno CI/CD
+        \item Configuración del entorno CI/CD: Puesta en marcha de la plataforma CI/CD seleccionada y configuración del pipeline base para los microservicios de prueba.
+        \item Desarrollo del módulo de integración con IA: Creación de los scripts (por ejemplo, en Python, Groovy, o el lenguaje soportado por el CI/CD) que: analicen la salida de la herramienta SAST, identifiquen las secciones de código relevantes, interactúen con el modelo de IA seleccionado (llamadas API, inferencia local si aplica), y manejen las respuestas.
+        \item Desarrollo del módulo de generación de reportes: Implementación de la lógica para tomar las vulnerabilidades detectadas y las sugerencias de la IA, y generar un informe consolidado y legible (por ejemplo, HTML con resaltado de código, tablas resumen) que se archive como artefacto del pipeline.
+        \item Contenerización (Docker): Empaquetar los microservicios de prueba y, potencialmente, algunos componentes del sistema usando Docker. Esto asegurará la reproducibilidad y facilitará el despliegue en el entorno CI/CD.
     \end{itemize}
     
     \item \textbf{Fase 4: Validación y Evaluación (Semanas 11-12)}
     \begin{itemize}
         \item Ejecución de pruebas: Ejecutar el pipeline CI/CD completo sobre los microservicios de prueba definidos en la Fase 2. Recopilar los reportes generados
-        \item Análisis cuantitativo: Medir métricas clave: tiempo de ejecución del pipeline (con y sin la etapa de IA), número de vulnerabilidades detectadas por SAST, número de sugerencias generadas por la IA, y tasa de éxito (sugerencias generadas / vulnerabilidades detectadas)
-        \item Análisis cualitativo: Evaluar manualmente la calidad, corrección y utilidad de las sugerencias de mitigación generadas por la IA. Comparar las sugerencias con las soluciones conocidas o esperadas para las vulnerabilidades introducidas
+        \item Análisis cuantitativo: Medir métricas clave: número de vulnerabilidades detectadas por SAST, número de sugerencias generadas por la IA, y tasa de éxito (sugerencias generadas / vulnerabilidades detectadas).
+        \item Análisis cualitativo: Evaluar manualmente la calidad, corrección y utilidad de las sugerencias de mitigación generadas por la IA. Comparar las sugerencias con las soluciones conocidas o esperadas para las vulnerabilidades introducidas.
     \end{itemize}
 \end{enumerate}

@@ -1,5 +1,6 @@
 
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % INICIO DEL CAPÍTULO 4
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -33,7 +34,7 @@ Este escenario es precisamente el problema que esta tesis busca resolver. La sol
 
 \subsection{Requisitos Funcionales del Sistema}
 
-Los requisitos funcionales describen lo que el sistema debe \textit{hacer}. Se definieron los siguientes:
+Los requisitos funcionales describen lo que el sistema debe hacer. Se definieron los siguientes:
 
 \subsubsection{RF-01: Integración Nativa en un Pipeline CI/CD}
 
@@ -251,8 +252,6 @@ Este diagrama muestra cómo se despliegan físicamente los componentes del softw
 
 La Figura \ref{fig:despliegue} ilustra una configuración clave: el contenedor del controlador de Jenkins tiene acceso al Docker socket del host. Esto le permite a Jenkins iniciar otros contenedores ``hermanos'', como el `AgentContainer`, donde se realiza todo el trabajo pesado. Esta es una configuración común y flexible conocida como ``Docker-in-Docker''.
 
-
-
 A continuación se detalla cada componente de software, archivo de configuración y script de automatización, explicando la implementación práctica y la lógica que gobierna cada decisión de ingeniería.
 
 \subsection{El Entorno de Ejecución Automatizado y Contenerizado}
@@ -323,82 +322,256 @@ Para hacer realidad la arquitectura de despliegue, se utilizó un único archivo
 Para iniciar todo el entorno, un usuario solo necesita ejecutar `docker-compose up -d --build` en la terminal, en el mismo directorio donde se encuentra este archivo. Docker se encargará de descargar la imagen de Jenkins, crear los volúmenes y lanzar el contenedor.
 
 En el \textbf{Anexo \ref{anexo:dockercompose}}, se referencia al directorio local ./jenkins\_home, el cual es indispensable ya que contiene toda la configuración, trabajos y datos de Jenkins, asegurando su persistencia entre reinicios del contenedor.
-
 \subsection{Implementación Detallada del Pipeline en Jenkinsfile}
 
-El archivo \texttt{Jenkinsfile} constituye el cerebro de la automatización de esta tesis. Define, a través de una sintaxis declarativa (\textit{Pipeline as Code}), todo el flujo de trabajo de Integración Continua, Análisis de Seguridad y Despliegue Continuo (CI/Sec/CD). Su propósito es orquestar de manera automática todas las herramientas y procesos, desde que el desarrollador sube el código hasta que se genera un reporte de seguridad accionable.
-
-A continuación, se desglosa su estructura y funcionamiento.
+El archivo \texttt{Jenkinsfile} es el cerebro de la automatización de esta tesis. Define, a través de la sintaxis declarativa de Jenkins (\textit{Pipeline as Code}), todo el flujo de trabajo de Integración Continua, Análisis de Seguridad y Despliegue Continuo (CI/Sec/CD). Su propósito es orquestar de manera automática todas las herramientas y procesos, desde que el desarrollador sube el código hasta que se genera un reporte de seguridad accionable.
 
 \subsubsection{Estructura y Entorno del Pipeline}
-El pipeline utiliza la sintaxis Declarativa y define un `environment` global. La variable `SCAN\_RESULTS\_DIR` se define aquí para proporcionar una ruta consistente y centralizada donde todas las etapas pueden leer o escribir artefactos de análisis.
 
+La sección inicial del archivo \texttt{Jenkinsfile} es fundamental, ya que configura las dos directivas principales que controlan todo el flujo de trabajo: el \textbf{agente de ejecución} y las \textbf{variables de entorno globales}. Estas definiciones establecen dónde se ejecutará el pipeline y qué datos estarán disponibles de manera consistente para todas sus etapas.
 
-\subsubsection{Configuración Inicial (Bloques tools y environment)}
+\paragraph{Agente de Ejecución.} La primera línea, \texttt{agent any}, es una instrucción crucial. Le dice a Jenkins que puede ejecutar este pipeline en cualquier agente de construcción que esté disponible. En el contexto de nuestro sistema, que se ejecuta enteramente dentro de un único contenedor Docker, esto significa que todas las etapas se llevarán a cabo en el propio controlador de Jenkins. Este agente ya está "precalentado" con todas las herramientas necesarias (Java, Maven, Python, Docker CLI) porque las instalamos directamente en el \texttt{Dockerfile}, garantizando un entorno consistente y rápido.
 
-El pipeline comienza estableciendo su entorno de ejecución \textbf{environment}, donde se definen las variables de entorno que estarán disponibles a lo largo de toda la ejecución. Es de especial importancia la línea: 
-    
-\texttt{OPENROUTER\_API\_KEY = credentials('openrouter-api-key-id')}, que demuestra una práctica de seguridad fundamental: la gestión de secretos. La clave de la API para el modelo de IA no está escrita en el código, sino que se obtiene del gestor de credenciales seguro de Jenkins.
-
-
+\paragraph{Variables de Entorno.} El bloque \texttt{environment} se utiliza para declarar variables que estarán disponibles globalmente en todas las etapas. Esto es útil para definir constantes que se usan en múltiples lugares, evitando la repetición y facilitando futuras modificaciones. Las variables clave definidas son:
+\begin{itemize}
+    \item \texttt{SCAN\_RESULTS\_DIR}: Define un nombre de directorio estándar (`scan-results`) donde todas las herramientas de análisis guardarán sus reportes. Esto crea una ruta consistente para que las etapas posteriores puedan encontrar y procesar los artefactos generados.
+    \item \texttt{JAVA\_ANALYSIS\_DIR} y \texttt{MAX\_FILES\_TO\_ANALYZE}: Parametrizan el comportamiento del script de IA, permitiendo ajustar fácilmente el alcance del análisis.
+    \item \texttt{AI\_MODEL}: Define qué modelo de IA se utilizará, cumpliendo con el requisito de extensibilidad \textbf{RNF-04}. Cambiar de modelo es tan simple como modificar el valor de esta variable.
+\end{itemize}
 
 \subsubsection{Flujo de Trabajo por Etapas (stages)}
-Cada etapa representa una unidad lógica de trabajo, ejecutada en secuencia, a menos que se indique lo contrario.
+El corazón del pipeline se organiza en una secuencia de etapas lógicas, cada una con una responsabilidad clara.
+
 \begin{itemize}
-    \item \textbf{Etapa 'Checkout \& Build'}: Esta etapa prepara el código fuente y lo compila. El comando `mvn -Dmaven.test.failure.ignore=true clean package` es deliberado: `clean` asegura que no queden artefactos de compilaciones anteriores, `package` compila el código y lo empaqueta en un `.jar`, y `-Dmaven.test.failure.ignore=true` permite que el pipeline continúe al análisis de seguridad incluso si las pruebas unitarias fallan.
+    \item \textbf{Etapa 'Checkout \& Build'}: Esta etapa prepara el entorno y compila la aplicación. El comando \texttt{mvn -Dmaven.test.failure.ignore=true clean package} es deliberado: `clean` asegura que no queden artefactos de compilaciones anteriores, `package` compila y ejecuta las pruebas unitarias, y el parámetro `-Dmaven.test.failure.ignore=true` permite que el pipeline continúe al análisis de seguridad incluso si las pruebas fallan, priorizando la retroalimentación temprana de seguridad.
 
-    \item \textbf{Etapa 'Unit Test Reports'}: Utiliza el paso `junit` para parsear los reportes XML generados por Maven. Jenkins utiliza estos datos para mostrar un historial de resultados de pruebas, visualizar tendencias y permitir un análisis detallado de los fallos de las pruebas unitarias.
+    \item \textbf{Etapa 'Unit Test Reports'}: Utiliza el paso \texttt{junit} para procesar los reportes XML generados por Maven. Jenkins usa estos datos para mostrar un historial de resultados, visualizar tendencias y permitir un análisis detallado de los fallos.
 
-    \item \textbf{Etapa 'Static Analysis'}: Esta etapa utiliza un bloque `parallel` para ejecutar dos tareas simultáneamente, reduciendo el tiempo total del pipeline. Mientras una hebra ejecuta el análisis con SpotBugs, la otra recopila la lista de archivos Java.
+    \item \textbf{Etapa 'Static Analysis'}: Para optimizar el tiempo (cumpliendo \textbf{RNF-01}), esta etapa utiliza un bloque \texttt{parallel} para ejecutar dos tareas simultáneamente. Mientras una rama ejecuta el análisis SAST con SpotBugs, la otra recopila la lista de archivos Java. El uso de \texttt{try-catch} dentro de la rama de SpotBugs añade resiliencia: un fallo en esta herramienta no detendrá el pipeline, simplemente se registrará.
 
-    \item \textbf{Etapa 'AI-Powered Analysis'}: Es el núcleo del proyecto. El paso `dir('scan-results')` aísla la ejecución del script y sus salidas en un directorio específico. El bloque `withCredentials` inyecta de forma segura la clave de la API, que el script de Python lee luego como una variable de entorno.
+    \item \textbf{Etapa 'AI-Powered Analysis'}: Es el núcleo innovador del proyecto. Aquí se utiliza el bloque \texttt{withCredentials}, una práctica de seguridad fundamental (cumpliendo \textbf{RNF-03}). Este bloque inyecta la clave de la API de OpenRouter de forma segura como una variable de entorno que solo existe durante la ejecución de este bloque, evitando su exposición en los logs o en el sistema de archivos.
 
-    \item \textbf{Etapa 'Quality Gate'}: Este es el control de seguridad automatizado. Su lógica implementa una política de "cero tolerancia" para vulnerabilidades críticas. El uso del paso `error()` es una decisión de diseño crucial: detiene el pipeline de forma inmediata y lo marca como `FAILURE`, previniendo físicamente que un artefacto inseguro pueda ser construido o desplegado.
+    \item \textbf{Etapa 'Quality Gate'}: Este es el control de seguridad automatizado. Lee el archivo analysis-results.json generado en la etapa anterior y verifica si se cumple la política de seguridad. El uso del paso \texttt{error()} es una decisión de diseño crucial: detiene el pipeline de forma inmediata y lo marca como \texttt{FAILURE} si se encuentra una vulnerabilidad crítica. Esto implementa una política de "cero tolerancia" y previene físicamente que un artefacto inseguro sea desplegado.
 
-    \item \textbf{Etapas 'Build Docker Image' y 'Local Deploy'}: Estas etapas, que solo se ejecutan si el Quality Gate es superado, completan el ciclo de Despliegue Continuo. El comando `docker build -f demo/Dockerfile -t demo-app .` se desglosa en: `-f` para especificar la ruta al Dockerfile, `-t` para etiquetar la imagen, y `.` para definir el contexto de construcción.
+    \item \textbf{Etapas 'Build Docker Image' y 'Local Deploy'}: Estas etapas, que solo se ejecutan si el Quality Gate es superado, completan el ciclo de Despliegue Continuo. Demuestran cómo el artefacto validado se empaqueta en una imagen Docker y se despliega, dejando la aplicación funcional para pruebas o su paso a producción.
 \end{itemize}
 
 \subsubsection{Acciones Finales y Reportes (post)}
-
-El bloque \texttt{post} define acciones que se ejecutan al finalizar el pipeline, independientemente del resultado:
+El bloque \texttt{post} es fundamental para la observabilidad y la auditoría del pipeline.
 \begin{itemize}
-    \item \textbf{always}: Se ejecuta siempre. Es responsable de publicar los resultados de las pruebas unitarias (\texttt{junit}), archivar todos los artefactos generados para trazabilidad (\texttt{archiveArtifacts}) y, lo más importante, publicar el reporte HTML del análisis de IA (\texttt{publishHTML}). Esto hace que el reporte sea fácilmente accesible desde la interfaz de Jenkins.
-    \item \textbf{success, unstable, failure}: Permiten enviar notificaciones o ejecutar acciones específicas dependiendo del estado final del pipeline, proporcionando una retroalimentación clara y concisa.
+    \item \textbf{always}: Esta condición garantiza que, sin importar si el pipeline tuvo éxito o falló, siempre se intentará publicar los informes (`junit` y `publishHTML`) y archivar los artefactos. Esto es vital, ya que incluso si el pipeline falla, los desarrolladores necesitan acceso a los reportes para entender la causa.
+    \item \textbf{success, failure, unstable}: Estos bloques permiten ejecutar acciones contextuales, como enviar notificaciones diferentes a diferentes canales (ej. un email en caso de fallo, un mensaje de Slack en caso de éxito), proporcionando una retroalimentación clara y concisa a los equipos.
 \end{itemize}
 
-Para mantener la claridad y brevedad en la descripción del sistema, el contenido completo del archivo más extenso se ha documentado en el \textbf{Anexo \ref{anexo:jenkinsfile}}.
+Para una revisión exhaustiva del código, el contenido completo del \texttt{Jenkinsfile} se encuentra en el \textbf{Anexo \ref{anexo:jenkinsfile}}.
 
+\subsection{El Módulo de Análisis con Inteligencia Artificial}
+\label{sec:ai_analyzer_script}
+El script de Python \texttt{ai\_code\_analyzer.py} actúa como el motor de análisis que orquesta la interacción entre el código fuente del proyecto y los modelos de lenguaje de gran tamaño (LLMs). Su diseño está orientado a la modularidad, la precisión y la generación de artefactos consumibles tanto por sistemas automatizados como por desarrolladores. El código fuente íntegro de este módulo se adjunta para su consulta en el \textbf{Anexo \ref{anexo:ai_analyzer}}.
 
-\subsubsection{El Script de IA: Componente Integrador del Sistema}
-\label{sec:ai_script}
+\subsubsection{Arquitectura y Funcionamiento General}
 
-El corazón de la innovación de este proyecto reside en el script de Python (\texttt{ai\_analyzer.py}) que se ejecuta en la etapa AI-Powered Analysis. Este script actúa como el ``componente de integración'' que une el mundo del análisis de seguridad tradicional con el poder de los modelos de lenguaje.
+El script opera a través de una clase principal, \texttt{OpenRouterAnalyzer}, que encapsula toda la lógica de comunicación y análisis. El flujo de ejecución, orquestado por la función \texttt{main()}, sigue estos pasos:
 
-El script realiza las siguientes tareas:
 \begin{enumerate}
-    \item \textbf{Recopila el Contexto:} Primero, parsea los resultados de SpotBugs y OWASP Dependency-Check. Aunque en esta versión del prototipo el foco principal está en analizar el código fuente basado en los hallazgos de SpotBugs, tener los datos de las dependencias disponibles permite futuras mejoras.
-    \item \textbf{Identifica los Ficheros a Analizar:} Busca todos los archivos `.java` en el código fuente del proyecto.
-    \item \textbf{Itera y Consulta a la IA:} Para cada archivo Java, construye un \textit{prompt} cuidadosamente diseñado y lo envía a la API de OpenRouter.
-    \item \textbf{Procesa la Respuesta de la IA:} Recibe la respuesta en formato JSON de la IA y la almacena.
-    \item \textbf{Genera los Reportes Finales:} Utiliza todos los datos recopilados para generar dos artefactos de salida:
-        \begin{itemize}
-            \item `analysis-results.json`: Un archivo JSON crudo con todos los datos, ideal para el procesamiento automático por parte de los Quality Gates.
-            \item `ai-analysis-report.html`: Un reporte HTML visualmente atractivo y fácil de leer para los desarrolladores.
-        \end{itemize}
+    \item \textbf{Inicialización y Configuración:} Al instanciar \texttt{OpenRouterAnalyzer}, el script lee la clave de la API desde la variable de entorno \texttt{OPENROUTER\_API\_KEY} y configura los encabezados HTTP necesarios para la autenticación con el servicio de OpenRouter. Se establece el modelo de IA a utilizar según la jerarquía de prioridades definida.
+    \item \textbf{Descubrimiento de Ficheros:} El script escanea el directorio de destino en busca de ficheros \texttt{.java} y \texttt{pom.xml}, que son los objetivos del análisis.
+    \item \textbf{Análisis Iterativo:} Para cada fichero identificado, se invoca a la función de análisis correspondiente (\texttt{analyze\_code\_security}, \texttt{analyze\_code\_quality}, o \texttt{analyze\_pom\_security}).
+    \item \textbf{Comunicación con la IA:} Cada función de análisis construye un \textit{prompt} específico y lo envía a la API de OpenRouter a través de una llamada POST. El script espera la respuesta del modelo.
+    \item \textbf{Procesamiento y Consolidación:} La respuesta de la IA, que se solicita en formato JSON, es parseada y validada. Los resultados de todos los ficheros se consolidan en una única estructura de datos.
+    \item \textbf{Generación de Reportes:} Finalmente, con todos los datos consolidados, la función \texttt{generate\_\linebreak report()} crea dos artefactos:
+    \begin{itemize}
+        \item \textbf{\texttt{analysis-results.json}:} Un fichero JSON estructurado que contiene todos los hallazgos detallados. Su propósito es ser consumido por sistemas automatizados, como el Quality Gate en el pipeline de Jenkins.
+        \item \textbf{\texttt{ai-analysis-report.html}:} Un reporte HTML visualmente enriquecido, diseñado para ser fácilmente interpretable por los desarrolladores (Anexo \ref{anexo:ai-analysis-report}).
+    \end{itemize}
 \end{enumerate}
 
-El \textbf{Anexo \ref{anexo:ai_analyzer}} muestra el código completo del script, ya que es una pieza central de la implementación.
+\subsubsection{Ingeniería de Prompts: La Clave de un Análisis Preciso}
 
-\subsubsection{El Arte de la Ingeniería de Prompts}
-
-La calidad de los resultados de un LLM es directamente proporcional a la calidad del prompt. El prompt utilizado en ``analyze\_code\_security'' (mostrado en la sección anterior) no fue la primera versión. Se llegó a él a través de un proceso iterativo de refinamiento, basado en los siguientes principios:
+La calidad y precisión del análisis dependen directamente de la calidad de las instrucciones (prompts) enviadas al modelo de IA. Se diseñaron tres prompts distintos, cada uno afinado para una tarea específica. Su estructura se basa en los siguientes principios de la ingeniería de prompts:
 
 \begin{itemize}
-    \item \textbf{Asignación de Rol y Tarea (Role-playing):} La primera línea, ``Actúa como un experto analista de seguridad de aplicaciones Java y un revisor de código senior'', es crucial. Establece un contexto para el modelo, indicándole qué ``personalidad'' y base de conocimientos debe adoptar. Esto produce resultados significativamente mejores que una pregunta genérica.
-    \item \textbf{Instrucciones Específicas:} En lugar de decir ``busca vulnerabilidades'', se proporciona una lista numerada de tipos de fallos de seguridad. Esto actúa como una checklist para el modelo, forzándolo a considerar diferentes vectores de ataque y reduciendo la probabilidad de que omita algo obvio.
-    \item \textbf{Contextualización con el Código:} Al incluir el código fuente completo dentro del prompt con la etiqueta ``java'', el modelo puede analizar las interacciones entre diferentes partes del código, en lugar de analizar una línea de forma aislada.
-    \item \textbf{Formato de Salida Estricto:} Esta es quizás la parte más importante para la automatización. La instrucción ``RESPONDE ÚNICA Y EXCLUSIVAMENTE CON UN OBJETO JSON VÁLIDO. No incluyas texto antes o después del JSON.'' es una directiva fuerte. Junto con el ejemplo de la estructura JSON deseada, aumenta drásticamente la probabilidad de que la salida del modelo pueda ser parseada programáticamente sin errores. Sin esta instrucción, los modelos a menudo añaden texto conversacional como ``Claro, aquí tienes el JSON con los resultados:'', lo que rompería el pipeline.
-    \item \textbf{Petición de Ejemplos de Código:} Al solicitar explícitamente ``Incluye un ejemplo de código corregido si es posible'', se le pide al modelo que vaya un paso más allá de la descripción y ofrezca una solución tangible, lo que es inmensamente valioso para el desarrollador.
+    \item \textbf{Asignación de Rol (Role-playing):} Cada prompt comienza con una directiva clara como \textit{“Actúa como un experto en seguridad de aplicaciones Java”}. Esta técnica prepara al modelo, estableciendo el contexto y activando su base de conocimiento relevante para la tarea, lo que resulta en respuestas significativamente más precisas.
+    
+    \item \textbf{Instrucciones Detalladas y Contextualizadas:} En lugar de una petición genérica, se proporciona una lista numerada de los tipos de vulnerabilidades o problemas de calidad a buscar. Esto funciona como una lista de verificación para el modelo, forzándolo a evaluar el código desde múltiples perspectivas. Además, se incluye el nombre del fichero y el código completo, permitiendo un análisis contextual en lugar de aislado.
+    
+    \item \textbf{Formato de Salida Estricto:} Se instruye explícitamente al modelo para que responda única y exclusivamente con un objeto JSON válido, proporcionando un ejemplo claro de la estructura deseada. Esta directiva es fundamental para la automatización, ya que garantiza que la salida pueda ser parseada programáticamente por el script sin errores. Para robustecer este proceso, la función \texttt{\_call\_api()} incluye lógica para extraer el bloque JSON de la respuesta, eliminando cualquier texto conversacional que el modelo pudiera añadir.
+    
+    \item \textbf{Petición de Soluciones Accionables:} Se solicita explícitamente que, de ser posible, se incluya un ejemplo de código corregido (\texttt{code\_correction\_suggested}). Esto va más allá de la simple detección, proveyendo un valor inmenso al desarrollador al ofrecerle una solución tangible y educativa.
+\end{itemize}
+
+A continuación, se presentan los prompts exactos utilizados en el script para cada tipo de análisis.
+
+\begin{lstlisting}[language=bash, caption={Prompt para el análisis de seguridad de ficheros Java.}, label={lst:prompt_sec}]
+Actúa como un experto en seguridad de aplicaciones Java. Analiza el siguiente código fuente para identificar vulnerabilidades de seguridad:
+
+Archivo: {filename}
+
+Busca específicamente:
+1. Inyección SQL
+2. Cross-Site Scripting (XSS)
+3. Problemas de autenticación/autorización
+4. Validación de entrada insuficiente
+5. Exposición de información sensible
+6. Vulnerabilidades de deserialización
+7. Uso inseguro de criptografía
+8. Path traversal
+9. Command injection
+10. Problemas de gestión de sesiones
+
+Código a analizar:
+```java
+{code_content}
+```
+
+Responde en formato JSON con la siguiente estructura:
+{{
+    "vulnerabilities": [
+        {{
+            "type": "tipo de vulnerabilidad",
+            "severity": "HIGH|MEDIUM|LOW",
+            "line": "número de línea aproximado",
+            "description": "descripción detallada",
+            "recommendation": "cómo solucionarlo",
+            "code_correction_suggested": "codigo para solucionar la vulnerabilidad",
+            "cwe_id": "CWE-XXX si aplica",
+            "impact": "impacto potencial de la vulnerabilidad"
+        }}
+    ],
+    "security_score": "puntuación del 0-10",
+    "summary": "resumen ejecutivo de los hallazgos"
+}}
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption={Prompt para el análisis de calidad de ficheros Java.}, label={lst:prompt_qual}]
+Actúa como un experto en calidad de código Java. Analiza el siguiente código para identificar problemas de calidad:
+
+Archivo: {filename}
+
+Evalúa:
+1. Code smells y anti-patrones
+2. Complejidad ciclomática alta
+3. Duplicación de código
+4. Problemas de mantenibilidad
+5. Violaciones de principios SOLID
+6. Uso inadecuado de patrones de diseño
+7. Gestión de excepciones
+8. Nomenclatura y convenciones
+9. Eficiencia y rendimiento
+10. Cobertura y calidad de comentarios
+
+Código a analizar:
+```java
+{code_content}
+```
+
+Responde en formato JSON:
+{{
+    "quality_issues": [
+        {{
+            "type": "tipo de problema",
+            "severity": "HIGH|MEDIUM|LOW",
+            "line": "número de línea aproximado",
+            "description": "descripción del problema",
+            "recommendation": "mejora sugerida",
+            "code_correction_suggested": "codigo para solucionar el problema",
+            "category": "Maintainability|Reliability|Performance|Documentation",
+            "effort": "tiempo estimado para solucionar (minutos)"
+        }}
+    ],
+    "quality_score": "puntuación del 0-10",
+    "maintainability_index": "índice de mantenibilidad",
+    "complexity_score": "puntuación de complejidad",
+    "technical_debt": "deuda técnica estimada en minutos"
+}}
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption={Prompt para el análisis de seguridad de ficheros POM.}, label={lst:prompt_pom}]
+Actúa como un experto en seguridad de proyectos Java Maven. Analiza el siguiente archivo POM para identificar vulnerabilidades de seguridad y problemas de configuración:
+
+Archivo: {filename}
+
+Busca específicamente:
+1. Dependencias con vulnerabilidades conocidas (CVE)
+2. Versiones desactualizadas de dependencias críticas
+3. Dependencias no firmadas o de repositorios inseguros
+4. Configuraciones inseguras de plugins
+5. Exposición de información sensible en propiedades
+6. Configuraciones de Maven que pueden introducir vulnerabilidades
+7. Dependencias con scopes inapropiados
+8. Plugins sin control de versiones
+9. Repositorios HTTP (no HTTPS)
+10. Dependencias snapshot en producción
+
+Contenido del POM:
+```xml
+{pom_content}
+```
+
+Responde en formato JSON con la siguiente estructura:
+{{
+    "vulnerabilities": [
+        {{
+            "type": "tipo de vulnerabilidad",
+            "severity": "HIGH|MEDIUM|LOW",
+            "line": "número de línea aproximado o sección",
+            "description": "descripción detallada",
+            "recommendation": "cómo solucionarlo",
+            "code_correction_suggested": "configuración XML para solucionar",
+            "cwe_id": "CVE-XXXX si aplica",
+            "impact": "impacto potencial de la vulnerabilidad",
+            "dependency": "nombre de la dependencia si aplica"
+        }}
+    ],
+    "security_score": "puntuación del 0-10",
+    "summary": "resumen ejecutivo de los hallazgos del POM",
+    "outdated_dependencies": [
+        {{
+            "dependency": "nombre de la dependencia",
+            "current_version": "versión actual",
+            "latest_version": "versión más reciente recomendada",
+            "security_risk": "nivel de riesgo de seguridad"
+        }}
+    ]
+}}
+\end{lstlisting}
+
+\subsubsection{Uso y Configuración del Script}
+El script fue diseñado para ser flexible y fácilmente integrable en flujos de trabajo de CI/CD. Su configuración se gestiona mediante una jerarquía de prioridades que ofrece múltiples formas de invocarlo.
+
+\paragraph{Jerarquía de Prioridades para el Modelo de IA.}
+El modelo a utilizar se determina con el siguiente orden de precedencia:
+\begin{enumerate}
+    \item \textbf{Argumento de línea de comandos:} El uso del flag \texttt{--model} (o \texttt{-mo}) en la terminal tiene la máxima prioridad.
+    \item \textbf{Variable de Entorno:} Si no se especifica el argumento, el script buscará la variable de entorno \texttt{AI\_MODEL}.
+    \item \textbf{Valor por Defecto:} Si ninguna de las opciones anteriores está presente, se utilizará el modelo predeterminado, codificado en el script como \texttt{google/gemini-2.0-flash-exp:free}.
+\end{enumerate}
+
+\paragraph{Argumentos de Línea de Comandos.}
+\begin{itemize}
+    \item \texttt{--directory}: Especifica el directorio raíz del proyecto a analizar. Si se omite, el script analizará el directorio actual.
+    \item \texttt{--model}: Permite definir qué modelo de IA de OpenRouter se debe utilizar para el análisis.
+    \item \texttt{--max-files}: Limita el número de ficheros \texttt{.java} a analizar, útil para ejecuciones rápidas o pruebas.
+\end{itemize}
+
+\paragraph{Ejemplos de Uso.}
+\begin{itemize}
+    \item \textbf{Análisis con el modelo por defecto:}
+    \begin{verbatim}
+    python3 ai_code_analyzer.py --directory /ruta/al/proyecto
+    \end{verbatim}
+    
+    \item \textbf{Especificando un modelo concreto:}
+    \begin{verbatim}
+    python3 ai_code_analyzer.py --directory /ruta/al/proyecto 
+            --model "anthropic/claude-3.5-sonnet"
+    \end{verbatim}
+    
+    \item \textbf{Utilizando una variable de entorno:}
+    \begin{verbatim}
+    export AI_MODEL="openai/gpt-4o"
+    python3 ai_code_analyzer.py --directory /ruta/al/proyecto
+    \end{verbatim}
 \end{itemize}
 
 \subsection{Desafíos y Soluciones de Implementación}
@@ -455,7 +628,7 @@ El componente central para la evaluación es el controlador \texttt{WelcomeContr
 
 \subsubsection{Análisis Detallado de Vulnerabilidades Introducidas}
 
-A continuación, se detallan las vulnerabilidades presentes en el código de prueba:
+Para realizar una evaluación controlada, el microservicio de prueba fue deliberadamente instrumentado con un conjunto de 12 vulnerabilidades, representativas de las categorías más comunes del OWASP Top 10. A continuación, se detalla cada una de ellas:
 
 \textbf{1. Clave Secreta Embebida en el Código (CWE-798):} Se han incluido credenciales directamente en el código fuente.
 \begin{lstlisting}[language=java, caption={Claves secretas hardcodeadas.}]
@@ -653,18 +826,19 @@ Como se estableció en la tabla \ref{tab:comparativa_detallada}, todos los model
 \paragraph{Profundidad y Seguridad de la Sugerencia de Corrección.}
 Un buen indicador de la calidad de un modelo es la robustez de la solución que propone. Se puede observar una diferencia clara en la gestión de la vulnerabilidad de \textbf{Path Traversal (CWE-22)}.
 
+
 \begin{itemize}
     \item El modelo \textbf{qwen/qwen-2.5-coder-32b-instruct:free} ofreció la siguiente sugerencia:
-    \begin{lstlisting}[language=java, caption={Sugerencia de Qwen para Path Traversal.}]
+    \begin{lstlisting}[language=java,caption={Sugerencia de Qwen para Path Traversal.}]
 // Sugerencia de corrección:
 if (!filePath.startsWith("/safe/directory/")) {
     throw new IllegalArgumentException("Ruta inválida");
 }
     \end{lstlisting}
-    \textbf{Análisis:} Esta solución es superficial e insegura. Un atacante podría evadirla fácilmente utilizando secuencias de escape como `filePath = "/safe/directory/../../etc/passwd"`, ya que la cadena efectivamente "comienza con" el prefijo permitido, pero luego navega fuera del directorio seguro.
+    \textbf{Análisis:} Esta solución es superficial e insegura. Un atacante podría evadirla fácilmente utilizando secuencias de escape como `filePath = "/safe/directory/../../etc/passwd", ya que la cadena efectivamente comienza con el prefijo permitido, pero luego navega fuera del directorio seguro.
 
     \item En contraste, los modelos \textbf{google/gemini-2.0-flash-exp:free} y \textbf{deepseek/deepseek-r1-0528:free} proporcionaron una solución mucho más robusta y segura:
-    \begin{lstlisting}[language=java, caption={Sugerencia de Gemini/DeepSeek para Path Traversal.}]
+    \begin{lstlisting}[language=java,caption={Sugerencia de Gemini/DeepSeek para Path Traversal.}]
 // Sugerencia de corrección:
 Path safePath = Paths.get("/safe/directory/").resolve(filePath).normalize();
 if (!safePath.startsWith(Paths.get("/safe/directory/"))) {
@@ -684,7 +858,7 @@ Otro diferenciador clave es la capacidad de algunos modelos para ofrecer observa
         \textbf{Descripción:} Class does not override equals() and hashCode(). This may cause unexpected behavior when used in collections. \\
         \textbf{Recomendación:} Implement equals() and hashCode() based on the message field.
     \end{quote}
-    \textbf{Análisis:} Esta es una sugerencia de alta calidad. No implementar `equals()` y `hashCode()` en DTOs es una fuente común de errores sutiles y difíciles de depurar cuando estos objetos se utilizan en colecciones como `HashMap` o `HashSet`. Este tipo de feedback proactivo ayuda a mejorar la robustez general de la aplicación.
+    \textbf{Análisis:} Esta es una sugerencia de alta calidad. No implementar `equals()` y `hashCode()` en DTOs es una causa frecuente de comportamientos anómalos y errores de difícil depuración cuando estos objetos se utilizan en colecciones como `HashMap` o `HashSet`. Este tipo de feedback proactivo ayuda a mejorar la robustez general de la aplicación.
 
     \item Por su parte, el modelo \textbf{google/gemini-2.0-flash-exp:free} se enfocó en un principio de diseño de software:
     \begin{quote}
@@ -696,6 +870,49 @@ Otro diferenciador clave es la capacidad de algunos modelos para ofrecer observa
 
 Estos ejemplos demuestran que, si bien la cobertura de detección de vulnerabilidades es una métrica base, la verdadera diferenciación y el valor para un equipo de desarrollo radican en la calidad, profundidad y seguridad de las recomendaciones generadas, así como en la capacidad del modelo para actuar como un revisor de código integral.
 
+\subsubsection{Análisis Cuantitativo de Rendimiento y Coste}
+
+Más allá de la calidad de la detección, la viabilidad de integrar una solución de IA en un pipeline de CI/CD depende críticamente de dos factores cuantitativos: el \textbf{rendimiento} (tiempo de ejecución) y el \textbf{coste} (consumo de tokens). Un análisis lento puede crear cuellos de botella en el ciclo de desarrollo, mientras que un alto consumo de tokens puede hacer que la solución sea económicamente inviable a escala.
+
+\paragraph{La Importancia de los Tokens.} En los modelos de IA comerciales, el coste se factura por el número de \textit{tokens} procesados. Un token es una unidad de texto (aproximadamente 4 caracteres en inglés). El coste total de una llamada a la API se compone de:
+\begin{itemize}
+    \item \textbf{Tokens de Entrada (Prompt Tokens):} El tamaño del código y las instrucciones enviadas al modelo. En este experimento, los tokens de entrada fueron constantes para todos los modelos, ya que analizaron los mismos ficheros.
+    \item \textbf{Tokens de Salida (Completion Tokens):} El tamaño de la respuesta JSON generada por el modelo. Una respuesta más detallada, con descripciones más largas y sugerencias de código más elaboradas, consume más tokens de salida y, por lo tanto, es más costosa.
+\end{itemize}
+
+Para evaluar estos factores, se midió el tiempo de ejecución de cada análisis y se utilizó el tamaño en bytes del fichero de resultados JSON como una métrica proxy del consumo de tokens de salida.
+
+\begin{table}[H]
+\centering
+\caption{Comparativa de Rendimiento y Consumo de Tokens}
+\label{tab:rendimiento_coste}
+
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Modelo de IA} & \textbf{\begin{tabular}[c]{@{}l@{}}Tiempo de \\ Análisis\end{tabular}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Tamaño de \\ Respuesta \\ (Proxy de \\ Tokens)\end{tabular}}} & \textbf{Análisis} \\
+\hline
+gemini-2.0-flash-exp:free & 1 min 38 seg & 45.6 KB & Rápido y detallado \\
+\hline
+deepseek-chat:free & 8 min 13 seg & 24.8 KB & \begin{tabular}[c]{@{}l@{}}Lento y moderadamente \\ detallado\end{tabular} \\
+\hline
+deepseek-r1-0528:free & 18 min 49 seg & 16.1 KB & Muy lento y conciso \\
+\hline
+qwen-2.5-coder-32b-instruct:free & 4 min 54 seg & \textbf{49.2 KB} & \textbf{\begin{tabular}[c]{@{}l@{}}Velocidad media, \\ respuesta más extensa\end{tabular}} \\
+\hline
+\end{tabular}%
+
+\end{table}
+
+\paragraph{Discusión de los Resultados.}
+La Tabla \ref{tab:rendimiento_coste} revela un interesante equilibrio entre velocidad, coste y verbosidad:
+\begin{itemize}
+    \item El modelo \textbf{qwen/qwen-2.5-coder-32b-instruct:free} generó la respuesta más detallada (mayor tamaño), lo que implica un mayor coste en tokens, pero lo hizo en un tiempo razonable. Esto sugiere que es un modelo que prioriza la exhaustividad en sus explicaciones.
+    \item El modelo \textbf{google/gemini-2.0-flash-exp:free} emerge como el más equilibrado para un entorno de CI/CD. Ofrece una velocidad de ejecución excepcional (casi 5 veces más rápido que el siguiente) y genera una respuesta muy detallada, representando una excelente relación entre eficiencia, coste y calidad de la información.
+    \item El modelo \textbf{deepseek/deepseek-r1-0528:free}, a pesar de ser el más lento, fue sorprendentemente el más conciso en su respuesta. Esto indica un estilo de comunicación muy directo, que podría ser preferible en algunos contextos, pero su alto tiempo de ejecución lo hace menos ideal para pipelines de integración continua que requieren retroalimentación rápida.
+\end{itemize}
+
+Este análisis cuantitativo es fundamental para la toma de decisiones en un entorno real. Un equipo podría optar por usar un modelo rápido y económico como \texttt{google/gemini-2.0-flash-exp:free} para las revisiones en cada \textit{commit}, y reservar el uso de un modelo más lento pero potencialmente más exhaustivo en sus explicaciones para los escaneos nocturnos o previos al despliegue.
+
 
 Del análisis detallado de los resultados, se extraen las siguientes observaciones clave:
 
@@ -706,9 +923,9 @@ Del análisis detallado de los resultados, se extraen las siguientes observacion
 
     \item \textbf{Nuevos Criterios de Diferenciación}: Dado que todos los modelos de IA alcanzaron la máxima puntuación en detección, la diferenciación entre ellos ya no se basa en la cobertura, sino en otros factores cualitativos y cuantitativos:
         \begin{itemize}
-            \item \textbf{Velocidad y Coste}: Como se observó previamente, existe un claro compromiso. Modelos como \texttt{google/gemini-2.0-flash-exp:free} ofrecen resultados casi instantáneos, mientras que otros como \texttt{deepseek/deepseek-r1-0528:free} son más lentos, lo que puede influir en la elección para distintos tipos de pipelines (CI vs. CD).
+            \item \textbf{Velocidad y Coste}: Como se observó previamente, existe un claro compromiso. Modelos como google/gemini-2.0-flash-exp:free ofrecen resultados casi instantáneos, mientras que otros como deepseek/deepseek-r1-0528:free son más lentos, lo que puede influir en la elección para distintos tipos de pipelines (CI vs. CD).
             \item \textbf{Calidad del Reporte}: Aunque todos detectaron las vulnerabilidades, la calidad y claridad de las descripciones y, sobre todo, de las sugerencias de corrección, varía entre modelos. Este factor cualitativo es crucial para la "accionabilidad" de los resultados por parte de los desarrolladores.
-            \item \textbf{Análisis de Calidad de Código}: Además de la seguridad, modelos como \texttt{deepseek/deepseek-r1-0528:free} también proporcionaron un análisis más rico sobre la calidad general del código, similar al de SonarQube, aportando un valor añadido.
+            \item \textbf{Análisis de Calidad de Código}: Además de la seguridad, modelos como deepseek-r1-0528:free también proporcionaron un análisis más rico sobre la calidad general del código, similar al de SonarQube, aportando un valor añadido.
         \end{itemize}
 
     \item \textbf{Complementariedad Re-evaluada}: La idea de complementariedad sigue siendo válida, pero con un nuevo matiz. SonarQube es fundamental para aplicar un conjunto de reglas de "higiene" de código de forma rápida y consistente. La IA, por su parte, no solo complementa, sino que asume el rol principal en la detección de vulnerabilidades de seguridad, ofreciendo una cobertura que antes solo era posible con herramientas comerciales muy costosas o revisiones manuales exhaustivas.
@@ -723,8 +940,8 @@ Mientras que SonarQube se mantiene como una herramienta indispensable para gober
 La elección final de la herramienta o modelo a integrar dependerá de los objetivos específicos y las restricciones del pipeline de cada organización:
 \begin{itemize}
     \item \textbf{Para Calidad de Código y Mantenibilidad}: SonarQube Community sigue siendo la herramienta de referencia indiscutible.
-    \item \textbf{Para Máxima Precisión y Cobertura en Seguridad}: El modelo \texttt{deepseek/deepseek-r1-0528:free} demostró ser la opción más segura y exhaustiva, ideal para ejecuciones en pipelines de despliegue a producción o en escaneos de seguridad programados y profundos donde la cobertura total es el objetivo principal.
-    \item \textbf{Para un Balance Óptimo entre Seguridad y Agilidad en CI/CD}: Los modelos \texttt{qwen/qwen-2.5-coder-32b-instruct:free} y \texttt{deepseek/deepseek-chat:free} ofrecen un excelente compromiso, detectando la gran mayoría de las vulnerabilidades críticas en un tiempo de ejecución que se adapta bien a un pipeline de desarrollo activo.
+    \item \textbf{Para Máxima Precisión y Cobertura en Seguridad}: El modelo deepseek-r1-0528 demostró ser la opción más segura y exhaustiva, ideal para ejecuciones en pipelines de despliegue a producción o en escaneos de seguridad programados y profundos donde la cobertura total es el objetivo principal.
+    \item \textbf{Para un Balance Óptimo entre Seguridad y Agilidad en CI/CD}: Los modelos gemini-2.0-flash-exp y deepseek-chat ofrecen un excelente compromiso, detectando la gran mayoría de las vulnerabilidades críticas en un tiempo de ejecución que se adapta bien a un pipeline de desarrollo activo.
 \end{itemize}
 
 En definitiva, una estrategia de DevSecOps madura debería considerar un enfoque híbrido, utilizando SonarQube para establecer una base sólida de calidad de código y complementándolo con un modelo de IA para realizar un análisis de seguridad contextual y profundo, automatizando así una defensa en profundidad directamente en el ciclo de vida del desarrollo.
@@ -732,10 +949,10 @@ En definitiva, una estrategia de DevSecOps madura debería considerar un enfoque
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FIN DEL CAPÍTULO 4
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Análisis de Resultados de la Ejecución del Pipeline}
+\subsection{Resultados de la Ejecución del Pipeline}
 \label{subsec:analisis_resultados_pipeline}
 
-Para la validación empírica de la solución, se seleccionó el modelo de IA google/gemini-2.0-flash-exp:free. Esta elección se basa en los resultados obtenidos en la evaluación comparativa de modelos detallada en la sección \ref{subsec:analisis_comparativo_resultados}, el cual evidenció el mejor equilibrio entre precisión, calidad de las sugerencias y eficiencia.
+Para la validación empírica de la solución, se seleccionó el modelo de IA gemini-2.0-flash-exp. Esta elección se basa en los resultados obtenidos en la evaluación comparativa de modelos detallada en la sección \ref{subsec:analisis_comparativo_resultados}, el cual evidenció el mejor equilibrio entre precisión, calidad de las sugerencias y eficiencia.
 
 Con el entorno CI/CD completamente automatizado, se procedió a ejecutar el pipeline para el microservicio de prueba (`demo`). La ejecución se activó tras un `commit` en el repositorio, demostrando el cumplimiento del requisito \textbf{RF-01}. La vista general de la ejecución del pipeline, mostrando las etapas completadas y el punto de fallo, se puede apreciar en la Figura \ref{fig:pipeline_general_fail}.
 
@@ -824,8 +1041,8 @@ Al superar con éxito esta puerta de calidad, en primer lugar, la etapa de prueb
     \label{fig:deploy_exitoso}
 \end{figure}
 
-El resultado final fue un pipeline completamente exitoso, con todas las etapas marcadas en verde, como se puede observar en la \textbf{Figura \ref{fig:pipeline_exitoso}}. Esto demuestra que la idea principal de la tesis funciona en la práctica: el sistema es capaz de guiar a un desarrollador para transformar un código base inseguro en uno seguro, y de validar automáticamente esta corrección para permitir su despliegue, completando así el ciclo DevSecOps de manera eficiente.
-% Usamos [H] del paquete 'float' para forzar la posición exacta de la figura.
+En conclusión, el ciclo de evaluación demostró ser un éxito completo. La primera ejecución validó la capacidad del sistema para detectar riesgos y actuar como un mecanismo de control preventivo, deteniendo un despliegue inseguro. La segunda ejecución, tras aplicar las correcciones sugeridas por la IA, validó la utilidad y precisión de dichas sugerencias, permitiendo que un artefacto seguro completara el pipeline de principio a fin, como se evidencia en la ejecución final de la \textbf{Figura \ref{fig:pipeline_exitoso}}. Este proceso empírico confirma que la integración de asistencia por IA en un pipeline CI/CD no solo es viable, sino que acelera eficazmente el ciclo de remediación, cumpliendo así con los objetivos centrales de esta tesis.
+
 \begin{figure}[H] 
     \centering
     \includegraphics[width=0.9\textwidth]{contenido/imagenes/4_pipeline_ok.png}
