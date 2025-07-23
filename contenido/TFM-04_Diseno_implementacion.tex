@@ -1,0 +1,623 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% INICIO DEL CAPÍTULO 4
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Diseño e Implementación}
+\label{chap:desarrollo}
+
+Este capítulo representa el núcleo técnico de la tesis. Aquí, las ideas y planes de los capítulos anteriores toman forma como una solución de software real y funcional. El objetivo de este capítulo es llevar al lector a través de un viaje detallado, desde la planificación inicial hasta la implementación final y la evaluación del prototipo. Se explicará no solo qué se construyó, sino también por qué se tomó cada decisión, los problemas que surgieron y cómo se resolvieron.
+
+La meta principal era crear un sistema que no solo encontrara fallos de seguridad en microservicios Java, sino que también ayudara activamente a los desarrolladores a solucionarlos. Para ello, se diseñó un pipeline de Integración Continua y Despliegue Continuo (CI/CD) que utiliza Inteligencia Artificial (IA) para dar sugerencias de corrección claras y útiles. Este capítulo documenta ese proceso en profundidad.
+
+\section{Planificación, Análisis y Requisitos}
+\label{sec:plani_desarrollo}
+
+Antes de escribir una sola línea de código, es fundamental planificar. Esta sección detalla el trabajo de análisis que guió todo el desarrollo, asegurando que la solución final resolviera un problema real de manera efectiva.
+
+\subsection{Análisis Profundo del Problema en un Contexto Industrial}
+
+Para entender mejor el problema, imaginemos un escenario realista en una empresa de software moderna ficticia, la cual ha adoptado microservicios y DevOps para acelerar la entrega de sus productos. Su equipo de desarrollo, compuesto por 25 programadores divididos en 5 escuadrones, utiliza Java con el framework Spring Boot para construir docenas de microservicios. Utilizan Jenkins para su CI/CD y alojan su código en GitHub.
+
+El problema de la empresa es un cuello de botella en la seguridad. Tienen un solo ingeniero de seguridad, que está completamente desbordado. Aunque han integrado herramientas de análisis como SonarQube, estas generan cientos de alertas cada semana. Los desarrolladores, presionados por cumplir con los plazos de entrega, a menudo ignoran estos reportes por varias razones:
+\begin{itemize}
+    \item \textbf{Fatiga por Alertas:} Demasiadas alertas, muchas de las cuales son falsos positivos, hacen que los desarrolladores pierdan la confianza en la herramienta.
+    \item \textbf{Falta de Contexto:} Una alerta puede decir ``Vulnerabilidad de Inyección SQL en la línea 54'', pero no explica por qué ese código es vulnerable en el contexto de la aplicación ni cuál es la forma correcta de solucionarlo usando las librerías y patrones de diseño.
+    \item \textbf{Curva de Aprendizaje:} No todos los desarrolladores son expertos en seguridad. Investigar cómo corregir una vulnerabilidad de deserialización de Java, por ejemplo, puede llevar horas de investigación que no tienen.
+\end{itemize}
+
+El resultado es que las vulnerabilidades permanecen en el código durante semanas o incluso meses, aumentando el riesgo de un ciberataque. El ingeniero de seguridad pasa la mayor parte de su tiempo revisando manualmente el código crítico y ``apagando incendios``, en lugar de trabajar en mejoras proactivas.
+
+Este escenario es precisamente el problema que esta tesis busca resolver. La solución propuesta no busca reemplazar al ingeniero de seguridad, sino darle una herramienta poderosa que automatice la parte más tediosa de su trabajo: la generación de recomendaciones de mitigación. La idea es que el pipeline de CI/CD, enriquecido con IA, actúe como un ``Asistente de seguridad virtual'' para cada desarrollador.
+
+\subsection{Requisitos Funcionales del Sistema}
+
+Los requisitos funcionales describen lo que el sistema \textbf{debe} hacer. Se definieron los siguientes:
+
+\subsubsection{RF-01: Integración Nativa en un Pipeline CI/CD}
+
+\textbf{Descripción:} El sistema completo debe operar como una serie de etapas dentro de un pipeline de Jenkins. No debe ser una herramienta externa que requiera ejecución manual.
+
+\textbf{Justificación:} Para ser adoptado en un entorno DevOps, la seguridad debe estar integrada en el flujo de trabajo existente. Forzar a los desarrolladores a usar una herramienta separada crearía fricción y reduciría la probabilidad de uso.
+
+\textbf{Criterio de Aceptación:} El pipeline se define completamente en un archivo Jenkinsfile y se ejecuta automáticamente en Jenkins tras un commit en el repositorio.
+
+\subsubsection{RF-02: Compilación y Empaquetado de Microservicios Java}
+
+\textbf{Descripción:} El pipeline debe ser capaz de compilar y empaquetar un microservicio estándar de Java construido con Maven.
+
+\textbf{Justificación:} Este es el paso fundamental de cualquier pipeline de CI. Sin un artefacto compilado, no se puede realizar un análisis completo ni un despliegue.
+
+\textbf{Criterio de Aceptación:} La ejecución del comando `mvn clean package` dentro del pipeline finaliza con éxito y genera un archivo `.jar` en el directorio `target/`.
+
+\subsubsection{RF-03: Ejecución de Análisis de Seguridad (SAST y SCA)}
+
+\textbf{Descripción:} El sistema debe realizar dos tipos de análisis: Análisis de Seguridad de Código Estático (SAST) para encontrar fallos en el código propio, y Análisis de Composición de Software (SCA) para encontrar vulnerabilidades en las librerías de terceros.
+
+\textbf{Justificación:} La seguridad de una aplicación depende tanto del código escrito por los desarrolladores como de las dependencias que utiliza. Cubrir ambos frentes es esencial para una estrategia de seguridad completa.
+
+\textbf{Criterio de Aceptación:} El pipeline ejecuta con éxito las herramientas OWASP Dependency-Check (SCA) y SpotBugs (SAST) y genera sus respectivos archivos de reporte.
+
+\subsubsection{RF-04: Generación de Sugerencias de Mitigación con IA}
+
+\textbf{Descripción:} Por cada archivo java y de de configuración, el sistema debe enviar el código a un modelo de IA a realizar el análisis de vulnerabilidades y solicitar sugerencias de corrección.
+
+\textbf{Justificación:} Este es el núcleo de la contribución de la tesis. Va más allá de la detección para ofrecer una solución.
+
+\textbf{Criterio de Aceptación:} Para una vulnerabilidad conocida, el sistema realiza una llamada a una API de IA y recibe una respuesta que contiene una recomendación de código para solucionarla.
+
+\subsubsection{RF-05: Generación de Reportes}
+
+\textbf{Descripción:} El sistema debe crear un reporte en formato HTML con los resultados de todos los análisis mediante IA de una manera que sea fácil de entender.
+
+\textbf{Justificación:} Los desarrolladores deberían tener un único panel de control con toda la información relevante lo cual mejora drásticamente la usabilidad.
+
+\textbf{Criterio de Aceptación:} Al final del pipeline, se genera un archivo `ai-analysis-report.html` que es publicado en la página del build de Jenkins.
+
+\subsubsection{RF-06: Implementación de ``Quality Gates''}
+
+\textbf{Descripción:} El sistema debe poder detener o marcar un build como inestable si la cantidad o severidad de las vulnerabilidades encontradas supera un umbral predefinido.
+
+\textbf{Justificación:} Los ``Quality Gates'' son una práctica estándar de DevSecOps para hacer cumplir las políticas de seguridad de forma automática.
+
+\textbf{Criterio de Aceptación:} Si el análisis de IA reporta una o más vulnerabilidades de severidad ``ALTA'', el pipeline de Jenkins finaliza con el estado ``UNSTABLE''.
+
+\subsubsection{RF-07: Despliegue Local ``Deploy''}
+
+\textbf{Descripción:} El sistema debe desplegar el servicio en un contenedor java en caso de que no tenga vulnerabilidades con severidad ALTA.
+
+\textbf{Justificación:} El ``Deploy'' es el ultimo paso del flujo del pipeline, el cual dispone operativamente el microservicio ejecutado en el pipeline.
+
+\textbf{Criterio de Aceptación:} Si el umbral del Quality Gate el microservicio se desplegará de manera local, finalizando con el pipeline.
+
+\subsection{Requisitos No Funcionales del Sistema}
+
+Los requisitos no funcionales describen \textbf{cómo} debe ser el sistema en términos de calidad y rendimiento.
+
+\subsubsection{RNF-01: Rendimiento}
+
+\textbf{Descripción:} La adición de la etapa de análisis con IA no debe hacer que el pipeline sea excesivamente lento.
+
+\textbf{Justificación:} En DevOps, la velocidad es clave. Un pipeline que tarda una hora en ejecutarse rompe el ciclo de retroalimentación rápida.
+
+\textbf{Criterio de Aceptación:} El tiempo total de ejecución del pipeline en un microservicio de tamaño medio no debe aumentar en más de 15 minutos debido a la etapa de análisis con IA.
+
+\subsubsection{RNF-02: Usabilidad}
+
+\textbf{Descripción:} El reporte final debe ser intuitivo y útil para un desarrollador que no es un experto en seguridad.
+
+\textbf{Justificación:} Si el reporte es confuso o difícil de usar, será ignorado. El objetivo es facilitar el trabajo del desarrollador, no complicarlo.
+
+\textbf{Criterio de Aceptación:} Un desarrollador, al ver el reporte, puede identificar rápidamente las vulnerabilidades críticas y entender las acciones recomendadas sin necesidad de consultar documentación externa.
+
+\subsubsection{RNF-03: Seguridad}
+
+\textbf{Descripción:} Los secretos, como las claves de API para servicios de IA, deben manejarse de forma segura.
+
+\textbf{Justificación:} Es irónico construir una herramienta de seguridad que introduce nuevas vulnerabilidades. Exponer claves de API en el código es una mala práctica grave.
+
+\textbf{Criterio de Aceptación:} La clave de la API de OpenRouter no está escrita directamente en el `Jenkinsfile` ni en ningún otro archivo del repositorio. Se gestiona a través del sistema de credenciales de Jenkins.
+
+\subsubsection{RNF-04: Extensibilidad}
+
+\textbf{Descripción:} La arquitectura debe facilitar la adición de nuevas herramientas de análisis o la sustitución de un modelo de IA por otro en el futuro.
+
+\textbf{Justificación:} El panorama tecnológico cambia rápidamente. Un sistema bien diseñado debe ser adaptable en lugar de rígido.
+
+\textbf{Criterio de Aceptación:} Para cambiar el modelo de IA utilizado (por ejemplo, de GPT-4o a Gemini), solo se necesita modificar una línea de código en el script de análisis, sin alterar la lógica principal del pipeline.
+
+\subsubsection{RNF-05: Reproducibilidad}
+
+\textbf{Descripción:} La ejecución del pipeline debe producir los mismos resultados independientemente de la máquina donde se ejecute.
+
+\textbf{Justificación:} Esto es crucial para la fiabilidad y la depuración. Elimina el problema de ``en mi máquina funciona''.
+
+\textbf{Criterio de Aceptación:} Todo el entorno de ejecución de Jenkins está definido y gestionado a través de contenedores Docker, especificados en un archivo `docker-compose.yml`.
+
+\subsection{Selección y Justificación Detallada de Tecnologías}
+
+La elección de las herramientas adecuadas es fundamental para el éxito de un proyecto de software. A continuación se detalla cada elección tecnológica.
+
+\subsubsection{Orquestador CI/CD: Jenkins}
+\textbf{Descripción:} Jenkins es un servidor de automatización de código abierto que permite orquestar pipelines de CI/CD. Se ejecuta como un servicio y gestiona ``agentes'' que son los que realizan el trabajo de compilación y prueba.
+\\
+\\
+\textbf{Justificación de la Elección:}
+\begin{itemize}
+    \item \textbf{Estándar de la Industria:} Jenkins ha sido durante mucho tiempo una de las herramientas de CI/CD más populares, lo que significa que hay una gran comunidad, abundante documentación y una enorme cantidad de plugins.
+    \item \textbf{Flexibilidad y Extensibilidad:} Su sistema de plugins permite integrarse con prácticamente cualquier otra herramienta. Para este proyecto, los plugins para GitHub, Docker, HTML Publisher y Maven fueron esenciales.
+    \item \textbf{Pipeline as Code:} La capacidad de definir todo el pipeline en un `Jenkinsfile` es una característica poderosa. Permite que la lógica de CI/CD sea tratada como cualquier otro código: se puede versionar, revisar y auditar.
+\end{itemize}
+\textbf{Alternativas Consideradas:}
+\begin{itemize}
+    \item \textbf{GitLab CI/CD:} Es una excelente opción, pero está fuertemente integrada en el ecosistema de GitLab. Como el objetivo era una solución que pudiera funcionar con cualquier repositorio Git (en este caso, GitHub), Jenkins ofrecía una mayor neutralidad.
+    \item \textbf{GitHub Actions:} Es la solución nativa de GitHub y es extremadamente potente. Sin embargo, para este proyecto de tesis, se prefirió Jenkins por su capacidad de auto-alojamiento, lo que da un control total sobre el entorno de ejecución y facilita la integración con herramientas locales y contenedores Docker de manera más explícita y didáctica.
+\end{itemize}
+
+\subsubsection{Contenerización: Docker y Docker Compose}
+\textbf{Descripción:} Docker es una plataforma que permite empaquetar aplicaciones y sus dependencias en ``contenedores'' ligeros y portátiles. Docker Compose es una herramienta para definir y ejecutar aplicaciones Docker multi-contenedor.
+
+\textbf{Justificación de la Elección:}
+\begin{itemize}
+    \item \textbf{Consistencia del Entorno:} Docker garantiza que el entorno donde se ejecuta el pipeline (con Java, Maven, Python y todas sus dependencias) sea idéntico en cada ejecución. Esto elimina problemas de configuración y asegura la reproducibilidad (RNF-05).
+    \item \textbf{Aislamiento:} Cada build de Jenkins se ejecuta en un contenedor limpio, lo que evita que los builds interfieran entre sí.
+    \item \textbf{Orquestación Simplificada:} Docker Compose permitió definir en un solo archivo (`docker-compose.yml`) todo el entorno necesario: el servidor Jenkins, una red virtual y los volúmenes para persistir los datos. Esto simplifica enormemente la configuración inicial del proyecto.
+\end{itemize}
+\textbf{Alternativas Consideradas:}
+\begin{itemize}
+    \item \textbf{Máquinas Virtuales (VMs):} Las VMs ofrecen un aislamiento aún más fuerte, pero son mucho más pesadas en términos de recursos (disco, RAM, tiempo de arranque). Los contenedores son más ligeros y rápidos, lo que los hace ideales para pipelines de CI/CD.
+    \item \textbf{Podman:} Es una alternativa a Docker que no requiere un demonio central, lo que puede ser más seguro. Sin embargo, Docker sigue siendo el estándar de la industria con un ecosistema más maduro, especialmente en lo que respecta a la integración con Jenkins.
+\end{itemize}
+
+\subsubsection{Análisis de Código (SAST/SCA): SpotBugs y OWASP Dependency-Check}
+\textbf{Descripción:} SpotBugs es una herramienta SAST que analiza el bytecode de Java en busca de ``patrones de error''. OWASP Dependency-Check es una herramienta SCA que compara las dependencias del proyecto con una base de datos de vulnerabilidades conocidas (NVD).
+
+\textbf{Justificación de la Elección:}
+\begin{itemize}
+    \item \textbf{Código Abierto y Madurez:} Ambas son herramientas de código abierto, gratuitas y muy respetadas en la comunidad de seguridad de Java.
+    \item \textbf{Complementariedad:} Ofrecen una cobertura de seguridad en dos frentes diferentes pero igualmente importantes: el código que escribes (SAST) y el código que importas (SCA).
+    \item \textbf{Fácil Integración con Maven:} Ambas herramientas tienen plugins de Maven oficiales, lo que hace que su integración en el `pom.xml` y su ejecución dentro del pipeline sean triviales.
+\end{itemize}
+\textbf{Alternativas Consideradas:}
+\begin{itemize}
+    \item \textbf{SonarQube:} Es una plataforma de calidad de código muy completa que incluye SAST. De hecho, internamente utiliza SpotBugs, entre otros. Se decidió usar SpotBugs directamente para tener un control más granular y una solución más ligera, sin la necesidad de administrar un servidor SonarQube completo.
+    \item \textbf{Snyk:} Es una solucion comercial de SCA muy potente que a menudo ofrece una mejor precisión y menos falsos positivos que Dependency-Check. Sin embargo, para un proyecto de tesis, una herramienta de código abierto como OWASP Dependency-Check era la opción más adecuada por su accesibilidad.
+\end{itemize}
+
+\subsubsection{Integración con IA: Python, OpenRouter.ai}
+\textbf{Descripción:} Python es el lenguaje de programación dominante para tareas de IA y ciencia de datos. OpenRouter.ai es una plataforma que actúa como un ``router'' o ``agregador'' de APIs de modelos de lenguaje grandes (LLMs), permitiendo llamar a diferentes modelos de diferentes proveedores con una sola API.
+
+\textbf{Justificación de la Elección:}
+\begin{itemize}
+    \item \textbf{Simplicidad de Python:} Para realizar llamadas a una API REST y procesar JSON, Python con su librería `requests` es increíblemente simple y eficiente.
+    \item \textbf{Flexibilidad de OpenRouter.ai:} Esta fue una decisión estratégica clave. En lugar de atarse a un solo proveedor como OpenAI, OpenRouter permitió experimentar con múltiples modelos (GPT, Claude, Llama, Gemini, Deepseek, etc.) para encontrar el mejor equilibrio entre rendimiento, coste y calidad para esta tarea específica. Esto fue fundamental para la evaluación comparativa (sección \ref{sec:evaluacion}).
+    \item \textbf{Superación de Obstáculos Locales:} Como se menciona en los desafíos (sección \ref{subsec:desafios_soluciones}), el plan inicial de usar modelos locales con Ollama fracasó por el alto consumo de recursos. OpenRouter resolvió este problema de inmediato, externalizando la carga computacional.
+    \item \textbf{Adopción de un Estándar de Facto:} Una decisión de diseño fundamental en el script de Python fue utilizar la librería cliente de OpenAI. Esto significa que, aunque para las pruebas se utilizó el servicio de agregación de OpenRouter, el sistema es compatible de forma nativa con cualquier proveedor de modelos de IA que ofrezca una API compatible con el estándar de OpenAI. Esto incluye a la propia OpenAI, Azure AI, y un número creciente de otros proveedores, garantizando la máxima flexibilidad y evitando la dependencia de un único servicio.
+\end{itemize}
+\textbf{Alternativas Consideradas:}
+\begin{itemize}
+    \item \textbf{Uso Directo de la API de OpenAI:} Era una opción viable, pero limitaría el prototipo a los modelos de OpenAI. OpenRouter proporcionó más flexibilidad para la investigación y la comparación.
+    \item \textbf{Modelos Específicos para Código (CodeLLaMA, CodeBERT):} Se consideró usar modelos más especializados. Sin embargo, los modelos de propósito general más avanzados (como GPT-4o o Gemini 1.5 Pro) han demostrado tener capacidades de razonamiento sobre código tan potentes que a menudo superan a los modelos especializados más pequeños, especialmente en tareas que requieren comprensión contextual como la seguridad. OpenRouter daba acceso a ambos tipos.
+\end{itemize}
+
+
+\section{Descripción del Sistema Desarrollado e Implementación}
+\label{sec:descripcionsistema_desarrollo}
+Esta sección presenta una descripción técnica exhaustiva del prototipo construido. El código fuente completo y todos los archivos de configuración descritos a continuación se encuentran disponibles públicamente en el repositorio de GitHub del proyecto: \url{https://github.com/iJonnathan/TFM}. 
+A continuación, se presenta la arquitectura, la configuración del entorno y se desglosa la implementación del pipeline paso a paso.
+
+\subsection{Arquitectura Detallada del Sistema}
+
+La arquitectura del sistema se puede describir desde tres perspectivas: componentes, secuencia y despliegue.
+
+\subsubsection{Diagrama de Componentes}
+
+El sistema está compuesto por varios componentes lógicos que interactúan entre sí.
+
+\begin{figure}[h!]
+\centering
+\centering
+    \includegraphics[width=0.9\textwidth]{contenido/imagenes/4_componentes.pdf}
+    \caption{Diagrama de componentes del sistema.}
+    \label{fig:componentes}
+\end{figure}
+
+Como muestra la Figura \ref{fig:componentes}, el pipeline de Jenkins es el orquestador central que invoca a las herramientas de análisis, se comunica con el módulo de IA y finalmente produce el reporte.
+
+\subsubsection{Diagrama de Secuencia}
+
+Este diagrama muestra la interacción entre los componentes a lo largo del tiempo para un solo ciclo de CI/CD.
+
+\begin{figure}[h!]
+\centering
+\centering
+    \includegraphics[width=1\textwidth]{contenido/imagenes/4_secuencia.pdf}
+    \caption{Diagrama de secuencia del flujo de trabajo DevSecOps.}
+    \label{fig:secuencia}
+\end{figure}
+
+\subsubsection{Diagrama de Despliegue}
+
+Este diagrama muestra cómo se despliegan físicamente los componentes del software en el hardware.
+
+\begin{figure}[h!]
+\centering
+\centering
+    \includegraphics[width=0.8\textwidth]{contenido/imagenes/4_despliegue.pdf}
+    \caption{Diagrama de despliegue del entorno.}
+    \label{fig:despliegue}
+\end{figure}
+
+La Figura \ref{fig:despliegue} ilustra una configuración clave: el contenedor del controlador de Jenkins tiene acceso al Docker socket del host. Esto le permite a Jenkins iniciar otros contenedores, como el `AgentContainer`, donde se realiza todo el trabajo pesado. Esta es una configuración común y flexible conocida como ``Docker-in-Docker''.
+
+A continuación se detalla cada componente de software, archivo de configuración y script de automatización, explicando la implementación práctica y la lógica que gobierna cada decisión de ingeniería.
+
+\subsection{El Entorno de Ejecución Automatizado y Contenerizado}
+\label{subsec:entorno_automatizado}
+
+La base de todo el sistema es un entorno de CI/CD consistente, portable y completamente automatizado. Este pilar se construye utilizando Docker para la contenerización y una serie de scripts para la configuración, encarnando los principios de \textbf{Infraestructura como Código (IaC)} y \textbf{Configuración como Código (CasC)}.
+
+\subsubsection{La Plantilla del Entorno: El Dockerfile}
+\label{subsubsec:dockerfile_exhaustivo}
+
+El `Dockerfile` actúa como el plano de construcción para la imagen de Docker personalizada sobre la cual se ejecutará Jenkins y todas las tareas del pipeline. Cada instrucción en este archivo fue elegida deliberadamente para construir un entorno autocontenido y completo.
+
+\paragraph{Imagen Base y Privilegios.}
+El punto de partida es la imagen oficial `jenkins/jenkins:lts`, que proporciona una versión estable y de soporte a largo plazo de Jenkins. Inmediatamente, se cambia al usuario `root` para obtener los permisos necesarios para instalar paquetes a nivel del sistema operativo.
+
+\paragraph{Instalación de Dependencias del Sistema.}
+El comando `apt-get update \&& apt-get install -y ...` instala todas las herramientas que el pipeline necesitará. Cada paquete tiene un rol específico:
+\begin{itemize}
+    \item \textbf{Herramientas base:} `ca-certificates` es necesario para validar conexiones SSL/TLS, y `curl` se utiliza para descargar archivos de internet, como la clave GPG de Docker.
+    \item \textbf{Entorno de Compilación Java:} `maven` y `openjdk-17-jdk` son indispensables para compilar, probar y empaquetar la aplicación de microservicio escrita en Java y Spring Boot.
+    \item \textbf{Entorno de Scripting Python:} `python3` y `python3-pip` son necesarios para ejecutar el script de análisis de IA y para instalar sus librerías externas, como `requests`.
+\end{itemize}
+
+\paragraph{Instalación del Cliente de Docker.}
+Una de las partes más importantes es la instalación del cliente de Docker (`docker-ce-cli`). El proceso sigue las mejores prácticas de seguridad recomendadas por Docker: primero se descarga y añade la clave GPG oficial del repositorio de Docker, y luego se añade el repositorio a las fuentes de `apt`. Esto asegura que se instale un binario de Docker auténtico y permite futuras actualizaciones. Este cliente es lo que permite al contenedor de Jenkins comunicarse con el motor de Docker del sistema anfitrión.
+
+\paragraph{Configuración como Código (CasC) para Jenkins.}
+La última sección del Dockerfile se centra en la configuración automática de Jenkins:
+\begin{itemize}
+    \item \textbf{Instalación de Plugins:} La línea `RUN jenkins-plugin-cli -f /usr/share/jenkins/ref/plugins.txt` es un mecanismo clave de la Configuración como Código. Le dice a Jenkins que lea el archivo `plugins.txt` e instale, durante la construcción de la imagen, todas las extensiones listadas. Esto elimina por completo la necesidad de instalar plugins manualmente desde la interfaz web, haciendo que la configuración sea 100\% reproducible.
+    \item \textbf{Scripts de Inicialización:} Se copian los scripts `.groovy` al directorio `init.groovy.d/`. Jenkins está diseñado para ejecutar cualquier script en este directorio la primera vez que arranca con un directorio `/var/jenkins\_home` vacío. Esto permite una configuración cero-toque\footnote{Proceso automatizado que permite configurar y desplegar dispositivos de forma remota y sin intervención manual del usuario.} del sistema.
+\end{itemize}
+
+\subsubsection{Configuración Inicial Cero-Toque: Los Scripts de Groovy}
+\label{subsubsec:groovy_exhaustivo}
+
+Estos scripts de Groovy son la clave para la automatización completa de la configuración inicial de Jenkins.
+
+\paragraph{El Script \texttt{security.groovy}.}
+Este script se encarga de la configuración de seguridad inicial. Su diseño es idempotente, lo que significa que es seguro ejecutarlo múltiples veces.
+\begin{enumerate}
+    \item Primero, obtiene la instancia actual de Jenkins con \texttt{Jenkins.get()}.
+    \item Luego, comprueba si el usuario `admin` ya existe usando \texttt{instance.getUser(``admin'')}.
+    \item Si el usuario no existe, procede a crear una configuración de seguridad. Lee la contraseña desde una variable de entorno (`JENKINS\_ADMIN\_PASSWORD'), crea el usuario `admin` y establece una estrategia de autorización segura y estándar.
+    \item Si el usuario ya existe, el script imprime un mensaje y finaliza, sin realizar ningún cambio.
+\end{enumerate}
+
+\paragraph{El Script \texttt{create\_pipeline.groovy}.}
+Este script automatiza la creación del trabajo o job del pipeline principal. Al igual que el de seguridad, es idempotente.
+\begin{enumerate}
+    \item Comprueba si ya existe un trabajo con el nombre definido en la variable de entorno `PIPELINE\_NAME`.
+    \item Si no existe, crea un nuevo WorkflowJob (un pipeline).
+    \item La parte más importante es que configura el trabajo para usar `CpsScmFlowDefinition`. Esto le dice a Jenkins que la definición del pipeline debe ser obtenida de un Jenkinsfile ubicado en un repositorio de Git.
+    \item Todos los detalles como la URL del repositorio, la rama, la ruta al Jenkinsfile se leen de variables de entorno, haciendo que la creación del pipeline sea totalmente configurable desde el exterior.
+    \item Finalmente, ejecuta `instance.reload()` para forzar a Jenkins a recargar su configuración desde el disco, asegurando que el nuevo pipeline sea visible inmediatamente.
+\end{enumerate}
+
+\subsection{Orquestación del Servicio: El Archivo \texttt{docker-compose.yml}}
+\label{subsubsec:compose_exhaustivo}
+
+Para hacer realidad la arquitectura de despliegue, se utilizó un único archivo `docker-compose.yml`. Este archivo es la receta para construir todo el entorno de CI/CD localmente. Orquesta el servicio de Jenkins con varias directivas clave:
+\begin{itemize}
+    \item \textbf{restart: always}: Una política de reinicio que asegura la alta disponibilidad del servicio. Si el contenedor se detiene por un error o un reinicio del sistema host, Docker lo levantará automáticamente.
+    \item \textbf{volumes}: Define cómo se manejan los datos. El montaje del socket de Docker (`/var/run/docker.sock`) habilita la arquitectura \textbf{Docker-out-of-Docker}, mientras que el volumen nombrado `jenkins\_data` asegura que todos los datos de Jenkins se almacenen de forma segura y persistente.
+    \item \textbf{environment}: Esta sección carga las variables desde el archivo `.env`. Separar la configuración (como contraseñas o URLs) en un archivo `.env` es una práctica recomendada que permite modificar el comportamiento del sistema sin tocar los archivos de orquestación.
+\end{itemize}
+
+Para iniciar todo el entorno, un usuario solo necesita ejecutar `docker-compose up -d --build` en la terminal, en el mismo directorio donde se encuentra este archivo. Docker se encargará de descargar la imagen de Jenkins, crear los volúmenes y lanzar el contenedor.
+
+En el \textbf{Anexo \ref{anexo:dockercompose}}, se referencia al directorio local ./jenkins\_home, el cual es indispensable ya que contiene toda la configuración, trabajos y datos de Jenkins, asegurando su persistencia entre reinicios del contenedor.
+\subsection{Implementación Detallada del Pipeline en Jenkinsfile}
+
+El archivo \texttt{Jenkinsfile} es el cerebro de la automatización de esta tesis. Define, a través de la sintaxis declarativa de Jenkins (\textit{Pipeline as Code}), todo el flujo de trabajo de Integración Continua, Análisis de Seguridad y Despliegue Continuo (CI/Sec/CD). Su propósito es orquestar de manera automática todas las herramientas y procesos, desde que el desarrollador sube el código hasta que se genera un reporte de seguridad accionable.
+
+\subsubsection{Estructura y Entorno del Pipeline}
+
+La sección inicial del archivo \texttt{Jenkinsfile} es fundamental, ya que configura las dos directivas principales que controlan todo el flujo de trabajo: el \textbf{agente de ejecución} y las \textbf{variables de entorno globales}. Estas definiciones establecen dónde se ejecutará el pipeline y qué datos estarán disponibles de manera consistente para todas sus etapas.
+
+\paragraph{Agente de Ejecución.} La primera línea, \texttt{agent any}, es una instrucción crucial. Le dice a Jenkins que puede ejecutar este pipeline en cualquier agente de construcción que esté disponible. En el contexto de nuestro sistema, que se ejecuta enteramente dentro de un único contenedor Docker, esto significa que todas las etapas se llevarán a cabo en el propio controlador de Jenkins. Este agente ya está con todas las herramientas necesarias (Java, Maven, Python, Docker CLI) porque las instalamos directamente en el \texttt{Dockerfile}, garantizando un entorno consistente y rápido.
+
+\paragraph{Variables de Entorno.} El bloque \texttt{environment} se utiliza para declarar variables que estarán disponibles globalmente en todas las etapas. Esto es útil para definir constantes que se usan en múltiples lugares, evitando la repetición y facilitando futuras modificaciones. Las variables clave definidas son:
+\begin{itemize}
+    \item \texttt{SCAN\_RESULTS\_DIR}: Define un nombre de directorio estándar (`scan-results`) donde todas las herramientas de análisis guardarán sus reportes. Esto crea una ruta consistente para que las etapas posteriores puedan encontrar y procesar los artefactos generados.
+    \item \texttt{JAVA\_ANALYSIS\_DIR} y \texttt{MAX\_FILES\_TO\_ANALYZE}: Parametrizan el comportamiento del script de IA, permitiendo ajustar fácilmente el alcance del análisis.
+    \item \texttt{AI\_MODEL}: Define qué modelo de IA se utilizará, cumpliendo con el requisito de extensibilidad \textbf{RNF-04}. Cambiar de modelo es tan simple como modificar el valor de esta variable.
+\end{itemize}
+
+\subsubsection{Flujo de Trabajo por Etapas (stages)}
+El corazón del pipeline se organiza en una secuencia de etapas lógicas, cada una con una responsabilidad clara.
+
+\begin{itemize}
+    \item \textbf{Etapa Checkout \& Build}: Esta etapa prepara el entorno y compila la aplicación. El comando \texttt{mvn -Dmaven.test.failure.ignore=true clean package} es deliberado: `clean` asegura que no queden artefactos de compilaciones anteriores, `package` compila y ejecuta las pruebas unitarias, y el parámetro `-Dmaven.test.failure.ignore=true` permite que el pipeline continúe al análisis de seguridad incluso si las pruebas fallan, priorizando la retroalimentación temprana de seguridad.
+
+    \item \textbf{Etapa Unit Test Reports}: Utiliza el paso \texttt{junit} para procesar los reportes XML generados por Maven. Jenkins usa estos datos para mostrar un historial de resultados, visualizar tendencias y permitir un análisis detallado de los fallos.
+
+    \item \textbf{Etapa 'Static Analysis'}: Para optimizar el tiempo (cumpliendo \textbf{RNF-01}), esta etapa utiliza un bloque \texttt{parallel} para ejecutar dos tareas simultáneamente. Mientras una rama ejecuta el análisis SAST con SpotBugs, la otra recopila la lista de archivos Java. El uso de \texttt{try-catch} dentro de la rama de SpotBugs añade resiliencia: un fallo en esta herramienta no detendrá el pipeline, simplemente se registrará.
+
+    \item \textbf{Etapa AI-Powered Analysis}: Es el núcleo innovador del proyecto. Aquí se utiliza el bloque \texttt{withCredentials}, una práctica de seguridad fundamental (cumpliendo \textbf{RNF-03}). Este bloque inyecta la clave de la API de OpenRouter de forma segura como una variable de entorno que solo existe durante la ejecución de este bloque, evitando su exposición en los logs o en el sistema de archivos.
+
+    \item \textbf{Etapa Quality Gate}: Este es el control de seguridad automatizado. Lee el archivo analysis-results.json generado en la etapa anterior y verifica si se cumple la política de seguridad. El uso del paso \texttt{error()} es una decisión de diseño crucial: detiene el pipeline de forma inmediata y lo marca como \texttt{FAILURE} si se encuentra una vulnerabilidad crítica. Esto implementa una política de "cero tolerancia" y previene físicamente que un artefacto inseguro sea desplegado.
+
+    \item \textbf{Etapas Build Docker Image y Local Deploy}: Estas etapas, que solo se ejecutan si el Quality Gate es superado, completan el ciclo de Despliegue Continuo. Demuestran cómo el artefacto validado se empaqueta en una imagen Docker y se despliega, dejando la aplicación funcional para pruebas o su paso a producción.
+\end{itemize}
+
+\subsubsection{Acciones Finales y Reportes (post)}
+El bloque \texttt{post} es fundamental para la observabilidad y la auditoría del pipeline.
+\begin{itemize}
+    \item \textbf{always}: Esta condición garantiza que, sin importar si el pipeline tuvo éxito o falló, siempre se intentará publicar los informes (`junit` y `publishHTML`) y archivar los artefactos. Esto es vital, ya que incluso si el pipeline falla, los desarrolladores necesitan acceso a los reportes para entender la causa.
+    \item \textbf{success, failure, unstable}: Estos bloques permiten ejecutar acciones contextuales, como enviar notificaciones diferentes a diferentes canales (ej. un email en caso de fallo, un mensaje de Slack en caso de éxito), proporcionando una retroalimentación clara y concisa a los equipos.
+\end{itemize}
+
+Para una revisión exhaustiva del código, el contenido completo del \texttt{Jenkinsfile} se encuentra en el \textbf{Anexo \ref{anexo:jenkinsfile}}.
+
+\subsection{El Módulo de Análisis con Inteligencia Artificial}
+\label{sec:ai_analyzer_script}
+El script de Python \texttt{ai\_code\_analyzer.py} actúa como el motor de análisis que orquesta la interacción entre el código fuente del proyecto y los modelos de lenguaje de gran tamaño (LLMs). Su diseño está orientado a la modularidad, la precisión y la generación de artefactos consumibles tanto por sistemas automatizados como por desarrolladores. El código fuente íntegro de este módulo se adjunta para su consulta en el \textbf{Anexo \ref{anexo:ai_analyzer}}.
+
+\subsubsection{Arquitectura y Funcionamiento General}
+
+El script opera a través de una clase principal, \texttt{OpenRouterAnalyzer}, que encapsula toda la lógica de comunicación y análisis. El flujo de ejecución, orquestado por la función \texttt{main()}, sigue estos pasos:
+
+\begin{enumerate}
+    \item \textbf{Inicialización y Configuración:} Al instanciar \texttt{OpenRouterAnalyzer}, el script lee la clave de la API desde la variable de entorno \texttt{OPENROUTER\_API\_KEY} y configura los encabezados HTTP necesarios para la autenticación con el servicio de OpenRouter. Se establece el modelo de IA a utilizar según la jerarquía de prioridades definida.
+    \item \textbf{Descubrimiento de Ficheros:} El script escanea el directorio de destino en busca de ficheros \texttt{.java} y \texttt{pom.xml}, que son los objetivos del análisis.
+    \item \textbf{Análisis Iterativo:} Para cada fichero identificado, se invoca a la función de análisis correspondiente (\texttt{analyze\_code\_security}, \texttt{analyze\_code\_quality}, o \texttt{analyze\_pom\_security}).
+    \item \textbf{Comunicación con la IA:} Cada función de análisis construye un \textit{prompt} específico y lo envía a la API de OpenRouter a través de una llamada POST. El script espera la respuesta del modelo.
+    \item \textbf{Procesamiento y Consolidación:} La respuesta de la IA, que se solicita en formato JSON, es parseada y validada. Los resultados de todos los ficheros se consolidan en una única estructura de datos.
+    \item \textbf{Generación de Reportes:} Finalmente, con todos los datos consolidados, la función \texttt{generate\_\linebreak report()} crea dos artefactos:
+    \begin{itemize}
+        \item \textbf{\texttt{analysis-results.json}:} Un fichero JSON estructurado que contiene todos los hallazgos detallados. Su propósito es ser consumido por sistemas automatizados, como el Quality Gate en el pipeline de Jenkins.
+        \item \textbf{\texttt{ai-analysis-report.html}:} Un reporte HTML visualmente enriquecido, diseñado para ser fácilmente interpretable por los desarrolladores (Anexo \ref{anexo:ai-analysis-report}).
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection{Ingeniería de Prompts: La Clave de un Análisis Preciso}
+
+La calidad y precisión del análisis dependen directamente de la calidad de las instrucciones (prompts) enviadas al modelo de IA. Se diseñaron tres prompts distintos, cada uno afinado para una tarea específica. Su estructura se basa en los siguientes principios de la ingeniería de prompts:
+
+\begin{itemize}
+    \item \textbf{Asignación de Rol (Role-playing):} Cada prompt comienza con una directiva clara como \textit{``Actúa como un experto en seguridad de aplicaciones Java''}. Esta técnica prepara al modelo, estableciendo el contexto y activando su base de conocimiento relevante para la tarea, lo que resulta en respuestas significativamente más precisas.
+    
+    \item \textbf{Instrucciones Detalladas y Contextualizadas:} En lugar de una petición genérica, se proporciona una lista numerada de los tipos de vulnerabilidades o problemas de calidad a buscar. Esto funciona como una lista de verificación para el modelo, forzándolo a evaluar el código desde múltiples perspectivas. Además, se incluye el nombre del fichero y el código completo, permitiendo un análisis contextual en lugar de aislado.
+    
+    \item \textbf{Formato de Salida Estricto:} Se instruye explícitamente al modelo para que responda única y exclusivamente con un objeto JSON válido, proporcionando un ejemplo claro de la estructura deseada. Esta directiva es fundamental para la automatización, ya que garantiza que la salida pueda ser parseada programáticamente por el script sin errores. Para robustecer este proceso, la función \texttt{\_call\_api()} incluye lógica para extraer el bloque JSON de la respuesta, eliminando cualquier texto conversacional que el modelo pudiera añadir.
+    
+    \item \textbf{Petición de Soluciones Accionables:} Se solicita explícitamente que, de ser posible, se incluya un ejemplo de código corregido (\texttt{code\_correction\_suggested}). Esto va más allá de la simple detección, proveyendo un valor inmenso al desarrollador al ofrecerle una solución tangible y educativa.
+\end{itemize}
+
+A continuación, se presentan los prompts exactos utilizados en el script para cada tipo de análisis.
+
+\begin{lstlisting}[language=bash, caption={Prompt para el análisis de seguridad de ficheros Java.}, label={lst:prompt_sec}]
+Actúa como un experto en seguridad de aplicaciones Java. Analiza el siguiente código fuente para identificar vulnerabilidades de seguridad:
+
+Archivo: {filename}
+
+Busca específicamente:
+1. Inyección SQL
+2. Cross-Site Scripting (XSS)
+3. Problemas de autenticación/autorización
+4. Validación de entrada insuficiente
+5. Exposición de información sensible
+6. Vulnerabilidades de deserialización
+7. Uso inseguro de criptografía
+8. Path traversal
+9. Command injection
+10. Problemas de gestión de sesiones
+
+Código a analizar:
+```java
+{code_content}
+```
+
+Responde en formato JSON con la siguiente estructura:
+{{
+    "vulnerabilities": [
+        {{
+            "type": "tipo de vulnerabilidad",
+            "severity": "HIGH|MEDIUM|LOW",
+            "line": "número de línea aproximado",
+            "description": "descripción detallada",
+            "recommendation": "cómo solucionarlo",
+            "code_correction_suggested": "codigo para solucionar la vulnerabilidad",
+            "cwe_id": "CWE-XXX si aplica",
+            "impact": "impacto potencial de la vulnerabilidad"
+        }}
+    ],
+    "security_score": "puntuación del 0-10",
+    "summary": "resumen ejecutivo de los hallazgos"
+}}
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption={Prompt para el análisis de calidad de ficheros Java.}, label={lst:prompt_qual}]
+Actúa como un experto en calidad de código Java. Analiza el siguiente código para identificar problemas de calidad:
+
+Archivo: {filename}
+
+Evalúa:
+1. Code smells y anti-patrones
+2. Complejidad ciclomática alta
+3. Duplicación de código
+4. Problemas de mantenibilidad
+5. Violaciones de principios SOLID
+6. Uso inadecuado de patrones de diseño
+7. Gestión de excepciones
+8. Nomenclatura y convenciones
+9. Eficiencia y rendimiento
+10. Cobertura y calidad de comentarios
+
+Código a analizar:
+```java
+{code_content}
+```
+
+Responde en formato JSON:
+{{
+    "quality_issues": [
+        {{
+            "type": "tipo de problema",
+            "severity": "HIGH|MEDIUM|LOW",
+            "line": "número de línea aproximado",
+            "description": "descripción del problema",
+            "recommendation": "mejora sugerida",
+            "code_correction_suggested": "codigo para solucionar el problema",
+            "category": "Maintainability|Reliability|Performance|Documentation",
+            "effort": "tiempo estimado para solucionar (minutos)"
+        }}
+    ],
+    "quality_score": "puntuación del 0-10",
+    "maintainability_index": "índice de mantenibilidad",
+    "complexity_score": "puntuación de complejidad",
+    "technical_debt": "deuda técnica estimada en minutos"
+}}
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption={Prompt para el análisis de seguridad de ficheros POM.}, label={lst:prompt_pom}]
+Actúa como un experto en seguridad de proyectos Java Maven. Analiza el siguiente archivo POM para identificar vulnerabilidades de seguridad y problemas de configuración:
+
+Archivo: {filename}
+
+Busca específicamente:
+1. Dependencias con vulnerabilidades conocidas (CVE)
+2. Versiones desactualizadas de dependencias críticas
+3. Dependencias no firmadas o de repositorios inseguros
+4. Configuraciones inseguras de plugins
+5. Exposición de información sensible en propiedades
+6. Configuraciones de Maven que pueden introducir vulnerabilidades
+7. Dependencias con scopes inapropiados
+8. Plugins sin control de versiones
+9. Repositorios HTTP (no HTTPS)
+10. Dependencias snapshot en producción
+
+Contenido del POM:
+```xml
+{pom_content}
+```
+
+Responde en formato JSON con la siguiente estructura:
+{{
+    "vulnerabilities": [
+        {{
+            "type": "tipo de vulnerabilidad",
+            "severity": "HIGH|MEDIUM|LOW",
+            "line": "número de línea aproximado o sección",
+            "description": "descripción detallada",
+            "recommendation": "cómo solucionarlo",
+            "code_correction_suggested": "configuración XML para solucionar",
+            "cwe_id": "CVE-XXXX si aplica",
+            "impact": "impacto potencial de la vulnerabilidad",
+            "dependency": "nombre de la dependencia si aplica"
+        }}
+    ],
+    "security_score": "puntuación del 0-10",
+    "summary": "resumen ejecutivo de los hallazgos del POM",
+    "outdated_dependencies": [
+        {{
+            "dependency": "nombre de la dependencia",
+            "current_version": "versión actual",
+            "latest_version": "versión más reciente recomendada",
+            "security_risk": "nivel de riesgo de seguridad"
+        }}
+    ]
+}}
+\end{lstlisting}
+
+\subsubsection{Uso y Configuración del Script}
+El script fue diseñado para ser flexible y fácilmente integrable en flujos de trabajo de CI/CD. Su configuración se gestiona mediante una jerarquía de prioridades que ofrece múltiples formas de invocarlo.
+
+\paragraph{Jerarquía de Prioridades para el Modelo de IA.}
+El modelo a utilizar se determina con el siguiente orden de precedencia:
+\begin{enumerate}
+    \item \textbf{Argumento de línea de comandos:} El uso del flag \texttt{--model} (o \texttt{-mo}) en la terminal tiene la máxima prioridad.
+    \item \textbf{Variable de Entorno:} Si no se especifica el argumento, el script buscará la variable de entorno \texttt{AI\_MODEL}.
+    \item \textbf{Valor por Defecto:} Si ninguna de las opciones anteriores está presente, se utilizará el modelo predeterminado, codificado en el script como \texttt{google/gemini-2.0-flash-exp:free}.
+\end{enumerate}
+
+\paragraph{Argumentos de Línea de Comandos.}
+\begin{itemize}
+    \item \texttt{--directory}: Especifica el directorio raíz del proyecto a analizar. Si se omite, el script analizará el directorio actual.
+    \item \texttt{--model}: Permite definir qué modelo de IA de OpenRouter se debe utilizar para el análisis.
+    \item \texttt{--max-files}: Limita el número de ficheros \texttt{.java} a analizar, útil para ejecuciones rápidas o pruebas.
+\end{itemize}
+
+\paragraph{Ejemplos de Uso.}
+\begin{itemize}
+    \item \textbf{Análisis con el modelo por defecto:}
+    \begin{verbatim}
+    python3 ai_code_analyzer.py --directory /ruta/al/proyecto
+    \end{verbatim}
+    
+    \item \textbf{Especificando un modelo concreto:}
+    \begin{verbatim}
+    python3 ai_code_analyzer.py --directory /ruta/al/proyecto 
+            --model "anthropic/claude-3.5-sonnet"
+    \end{verbatim}
+    
+    \item \textbf{Utilizando una variable de entorno:}
+    \begin{verbatim}
+    export AI_MODEL="openai/gpt-4o"
+    python3 ai_code_analyzer.py --directory /ruta/al/proyecto
+    \end{verbatim}
+\end{itemize}
+
+\subsection{Desafíos y Soluciones de Implementación}
+\label{subsec:desafios_soluciones}
+Ningún proyecto de software está exento de problemas. A continuación se detallan los desafíos más significativos encontrados durante el desarrollo y cómo fueron abordados.
+
+\subsubsection{Desafío 1: El Cuello de Botella de los Modelos Locales (Ollama)}
+
+\textbf{Problema:} La intención inicial era utilizar modelos de código abierto como Llama 3 o CodeLlama, ejecutándose localmente en el agente de Jenkins a través de la plataforma Ollama. La ventaja era el coste cero y un mayor control sobre la privacidad de los datos. Sin embargo, las pruebas iniciales revelaron un problema grave de rendimiento. Un modelo de 7 mil millones de parámetros (7B), considerado de tamaño mediano, requería más de 10 GB de RAM y un uso intensivo de CPU. Esto provocaba que la etapa de análisis de un solo archivo tardara varios minutos y, en agentes con recursos limitados, causaba que el sistema se colapsara.
+
+\textbf{Solución:} Se tomó la decisión estratégica de pivotar desde los modelos locales hacia un servicio de API gestionado. Se eligió OpenRouter.ai por su flexibilidad. Este cambio, aunque introducía una dependencia externa y un pequeño coste por uso, resolvió el problema de rendimiento de raíz. La carga computacional se trasladó de la infraestructura local de CI/CD a los servidores optimizados de los proveedores de IA, reduciendo la latencia de minutos a segundos y haciendo que el pipeline fuera viable.
+
+\subsubsection{Desafío 2: Garantizar la Consistencia de la Salida de la IA}
+
+\textbf{Problema:} A pesar de las instrucciones explícitas en el prompt, algunos modelos de IA, especialmente los más pequeños o los que no están afinados para seguir instrucciones (instruction-tuned), a veces fallaban en devolver un JSON perfecto. Podían añadir texto explicativo antes o después del objeto JSON, o incluso generar un JSON con errores de sintaxis (como una coma extra al final de una lista).
+
+\textbf{Solución:} Se implementó una capa de ``limpieza'' en el script de Python. Como se ve en la función `\_call\_ai\_model`, en lugar de asumir que toda la respuesta es JSON, el código busca el primer carácter `{` y el último `}` y extrae el texto intermedio. Esto elimina cualquier texto de relleno. Además, toda la lógica de parseo (`json.loads`) se envolvió en un bloque `try-except` para capturar `JSONDecodeError`. Si el parseo falla, el error se registra y el pipeline continúa, evitando una falla catastrófica por una respuesta malformada de la IA.
+
+\subsubsection{Desafío 3: Gestión Segura de Credenciales}
+\textbf{Problema:} El uso de la API de OpenRouter.ai requiere una clave de API, que es un secreto que no debe ser expuesto en el código fuente Jenkinsfile.
+
+\textbf{Solución:} Se utilizó el sistema de gestión de credenciales integrado de Jenkins. Los pasos fueron:
+\begin{enumerate}
+    \item En la interfaz de Jenkins, ir a `Manage Jenkins -> Credentials`.
+    \item Añadir una nueva credencial de tipo ``Secret text''.
+    \item Pegar la clave de la API de OpenRouter en el campo ``Secret'' y asignarle un ID, por ejemplo, `openrouter-api-key-id`.
+    \item En el `Jenkinsfile`, usar la directiva `credentials()` para inyectar este secreto en una variable de entorno de forma segura, como se muestra en la sección `environment`: `OPENROUTER\_API\_KEY = credentials('openrouter-api-key-id')`.
+\end{enumerate}
+De esta manera, la clave nunca es visible en el código y está protegida por Jenkins.
+
+\subsubsection{Desafío 4: Consideraciones sobre la Privacidad y Seguridad de los Datos al Usar Servicios de IA de Terceros}
+\label{sec:privacidad_datos}
+
+\textbf{Problema:} Al enviar código fuente, potencialmente propietario y sensible, a un servicio de terceros como OpenRouter.ai, surge una preocupación fundamental: ¿cómo se manejan esos datos? Es crucial entender si el código se almacena, si se utiliza para entrenar otros modelos y qué riesgos de seguridad implica para una empresa.
+
+\textbf{Análisis y Solución:} Una investigación de los términos de servicio y la política de privacidad de OpenRouter.ai \cite{OpenRouterTOS} revela varios puntos clave:
+\begin{itemize}
+    \item \textbf{No almacenamiento por defecto:} La política de OpenRouter establece que, por defecto, no almacenan el contenido de las peticiones (prompts) ni las respuestas de los modelos. Solo se registran metadatos para la facturación y el monitoreo, como las marcas de tiempo y el número de tokens utilizados.
+    \item \textbf{Control sobre el entrenamiento de modelos:} OpenRouter actúa como un intermediario. La decisión de si los datos se utilizan para entrenamiento recae en el proveedor del modelo final (por ejemplo, Google, OpenAI, etc.). Sin embargo, OpenRouter proporciona un control granular al usuario. En la configuración de la cuenta, se puede desactivar explícitamente la opción de enviar datos a proveedores que los utilizan para entrenamiento. Si esta opción está desactivada, OpenRouter garantiza que las peticiones solo se enrutarán a modelos y proveedores que se han comprometido a no entrenar con los datos del usuario \cite{OpenRouterPrivacy}.
+    \item \textbf{Riesgos residuales:} A pesar de estos controles, el principal riesgo para una empresa reside en la confianza depositada en la cadena de proveedores. Se debe confiar en que OpenRouter cumplirá con su política de enrutamiento y, a su vez, en que el proveedor final del modelo cumplirá con su política de no-entrenamiento. Para una empresa con código fuente altamente sensible o regulado, la única solución para mitigar completamente este riesgo sería utilizar modelos de IA auto-alojados (on-premise), aunque esto reintroduce el \textit{Desafío 1} relacionado con los altos costes de infraestructura y mantenimiento.
+\end{itemize}
+
+\textbf{Conclusión:} Para el propósito de esta tesis y para muchas aplicaciones comerciales, los controles ofrecidos por OpenRouter.ai se consideran una solución pragmática y suficientemente segura. Permiten aprovechar la potencia de los modelos más avanzados mientras se mitiga activamente el riesgo de que el código propietario sea utilizado para entrenamiento. La decisión final dependerá siempre de la política de seguridad y el nivel de riesgo aceptable de cada organización.
+
+\subsection{Resumen de la Implementación y Transición a la Evaluación}
+A lo largo de este capítulo, se ha detallado el proceso completo de diseño e implementación del prototipo, desde la concepción inicial basada en requisitos funcionales y no funcionales hasta la construcción final de cada componente. Se ha establecido un entorno de CI/CD robusto y reproducible mediante Docker y Jenkins, configurado a través de Infraestructura como Código. Se ha implementado un pipeline Jenkinsfile que orquesta el flujo de análisis, integrando herramientas SAST y el módulo de análisis con IA. Finalmente, se ha descrito el núcleo de la contribución: el script de Python que, mediante una cuidada ingeniería de prompts, interactúa con modelos de lenguaje avanzados para generar sugerencias de mitigación.
+
+Con el prototipo completamente funcional y los desafíos de implementación resueltos, el sistema está listo para ser sometido a prueba. El siguiente capítulo se centrará en la evaluación empírica de la solución, donde se analizará su efectividad, precisión y rendimiento al enfrentarse a un microservicio con vulnerabilidades conocidas, comparando sus resultados con los de herramientas estándar de la industria.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% FIN DEL CAPÍTULO 4
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
