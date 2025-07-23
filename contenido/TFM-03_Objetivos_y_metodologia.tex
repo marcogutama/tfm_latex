@@ -1,4 +1,4 @@
-\chapter{Objetivos y metodología de trabajo}\label{chap:objetivos_metodologia} % Cambiado el label para que sea único
+\chapter{Objetivos y metodología de trabajo}\label{chap:objetivos_metodologia}
 Este capítulo es fundamental, ya que traduce la problemática y la visión general en metas concretas y un plan de acción detallado. Se define el propósito último del trabajo (objetivo general), se desglosa en pasos alcanzables y verificables (objetivos específicos) y se describe el enfoque metodológico que se seguirá para llevar a cabo la investigación y el desarrollo.
 
 \section{Objetivo general}\label{sec:objgeneral}
@@ -15,7 +15,7 @@ Para lograr el objetivo general de manera estructurada y medible, se establecen 
     
     \item \textbf{Seleccionar e integrar modelos de IA para análisis de código:} Investigar y evaluar la idoneidad de diferentes modelos de IA existentes para la tarea específica de analizar fragmentos de código Java marcados como vulnerables y generar sugerencias de corrección. Seleccionar al menos un modelo e implementar la integración técnica (llamadas API, procesamiento de entrada/salida) dentro del pipeline. El objetivo es establecer la capacidad de análisis inteligente.
     
-    \item \textbf{Desarrollar la lógica de organización y generación de sugerencias:} Implementar la lógica de conexión dentro del pipeline que:
+    \item \textbf{Implementar el módulo de análisis y sugerencias con IA:} Implementar la lógica de conexión dentro del pipeline que:
     \begin{itemize}
         \item Prepare y envíe las clases y archivos de configuración del proyecto de forma adecuada al modelo de IA seleccionado.
         \item Reciba la respuesta del modelo de IA.
@@ -23,9 +23,9 @@ Para lograr el objetivo general de manera estructurada y medible, se establecen 
     \end{itemize}
     Este es el núcleo de la funcionalidad propuesta.
     
-    \item \textbf{Automatizar el flujo completo en el pipeline CI/CD:} Asegurar que todo el proceso (Descarga de código $\rightarrow$ Compilación $\rightarrow$ Pruebas Unitarias $\rightarrow$ Análisis estático $\rightarrow$ Análisis mediante IA $\rightarrow$ Criterios de calidad $\rightarrow$  Desplieguenla del servicio) se ejecute de forma automática como parte integral del pipeline CI/CD elegido (por ejemplo, Jenkins, GitLab CI/CD, GitHub Actions). Este proceso se activaría, por ejemplo, en cada commit o merge request. El objetivo es demostrar la integración transparente en el flujo DevOps.
+    \item \textbf{Automatizar el flujo completo en el pipeline CI/CD:} Asegurar que todo el proceso (Descarga de código $\rightarrow$ Compilación $\rightarrow$ Pruebas Unitarias $\rightarrow$ Análisis estático $\rightarrow$ Análisis mediante IA $\rightarrow$ Criterios de calidad $\rightarrow$ Despliegue del servicio) se ejecute de forma automática como parte integral del pipeline CI/CD elegido (por ejemplo, Jenkins, GitLab CI/CD, GitHub Actions). Este proceso se activaría, por ejemplo, en cada commit o merge request. El objetivo es demostrar la integración transparente en el flujo DevOps.
     
-    \item \textbf{Implementar la generación de reportes accionables:} Diseñar y desarrollar un mecanismo para generar reportes claros y concisos en formato HTML, que presenten las vulnerabilidades detectadas junto con las correspondientes sugerencias de mitigación proporcionadas por la IA. Estos reportes deben ser fácilmente accesibles como artefactos del pipeline para que los desarrolladores puedan revisarlos. El fin es crear un mecanismo de retroalimentación efectivo.
+    \item \textbf{Implementar la generación de reportes accionables:} Diseñar y desarrollar un mecanismo para generar reportes claros y concisos en formato HTML, que presenten las vulnerabilidades detectadas junto con las correspondientes sugerencias de mitigación proporcionadas por la IA. Estos reportes deben ser fácilmente accesibles como artefactos del pipeline para que los desarrolladores puedan revisarlos. El fin es crear un mecanismo de retroalimentaci\u00f3n efectivo.
     
     \item \textbf{Evaluar la efectividad y rendimiento del prototipo:} Diseñar y ejecutar un conjunto de experimentos utilizando microservicios Java de ejemplo con vulnerabilidades conocidas. Medir métricas clave como:
     \begin{itemize}
@@ -64,7 +64,7 @@ Para alcanzar los objetivos descritos de manera sistemática y rigurosa, se segu
     
     \item \textbf{Fase 4: Validación y Evaluación (Semanas 11-12)}
     \begin{itemize}
-        \item Ejecución de pruebas: Ejecutar el pipeline CI/CD completo sobre los microservicios de prueba definidos en la Fase 2. Recopilar los reportes generados
+        \item Ejecución de pruebas: Ejecutar el pipeline CI/CD completo sobre los microservicios de prueba definidos en la Fase 2. Recopilar los reportes generados.
         \item Análisis cuantitativo: Medir métricas clave: número de vulnerabilidades detectadas por SAST, número de sugerencias generadas por la IA, y tasa de éxito (sugerencias generadas / vulnerabilidades detectadas).
         \item Análisis cualitativo: Evaluar manualmente la calidad, corrección y utilidad de las sugerencias de mitigación generadas por la IA. Comparar las sugerencias con las soluciones conocidas o esperadas para las vulnerabilidades introducidas.
     \end{itemize}

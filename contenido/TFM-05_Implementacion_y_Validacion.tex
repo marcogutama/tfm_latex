@@ -4,6 +4,13 @@
 
 \chapter{Evaluación y Resultados}
 \label{chap:implementacion}
+Este capítulo presenta la evaluación empírica y los resultados obtenidos al aplicar la metodología propuesta en esta tesis. Para validar la eficacia de la inteligencia artificial como herramienta de análisis de seguridad, la evaluación se desarrolla en dos fases principales.
+
+
+Primero, se lleva a cabo una rigurosa comparativa entre cuatro modelos de IA de última generación y dos herramientas de referencia en la industria, SonarQube y Snyk. Utilizando un microservicio deliberadamente instrumentado con 13 vulnerabilidades comunes, se mide no solo la capacidad de detección de cada herramienta, sino también aspectos cualitativos como la calidad de las sugerencias de corrección y la profundidad del análisis. Además, se realiza un estudio cuantitativo del rendimiento y el coste computacional, factores cruciales para la viabilidad en un entorno de desarrollo real.
+
+
+En la segunda parte, se exponen los resultados de la implementación práctica del modelo de IA más equilibrado en un pipeline de Integración y Despliegue Continuo (CI/CD) completamente automatizado. Se demuestra el ciclo completo de detección, bloqueo de código inseguro mediante un \textit{Quality Gate}, facilitación de la remediación a través de reportes accionables y, finalmente, la validación de las correcciones con una ejecución exitosa del pipeline.
 
 \section{Evaluación}
 \label{sec:evaluacion}
@@ -15,7 +22,7 @@ El componente central para la evaluación es el controlador \texttt{WelcomeContr
 
 \subsubsection{Análisis Detallado de Vulnerabilidades Introducidas}
 
-Para realizar una evaluación controlada, el microservicio de prueba fue deliberadamente instrumentado con un conjunto de 13 vulnerabilidades, representativas de las categorías más comunes del OWASP Top 10. A continuación, se detalla cada una de ellas:
+Para realizar una evaluación controlada, el microservicio de prueba fue deliberadamente instrumentado con un conjunto de vulnerabilidades, representativas de las categorías más comunes del OWASP Top 10. A continuación, se detalla cada una de ellas:
 
 \textbf{1. Clave Secreta Embebida en el Código (CWE-798):} Se han incluido credenciales directamente en el código fuente.
 \begin{lstlisting}[language=java, caption={Claves secretas hardcodeadas.}]
@@ -266,30 +273,23 @@ Más allá de la calidad de la detección, la viabilidad de integrar una soluci�
 \end{itemize}
 
 Para evaluar estos factores, se midió el tiempo de ejecución de cada análisis y se utilizó el tamaño en bytes del fichero de resultados JSON como una métrica proxy del consumo de tokens de salida.
-
 \begin{table}[H]
-\centering
-\caption{Comparativa de Rendimiento y Consumo de Tokens}
-\n\begin{tabular}{|l|c|c|c|}
-\hline
-\textbf{Modelo de IA} & \textbf{\begin{tabular}[c]{@{}l@{}}Tiempo de \\
-Análisis\end{tabular}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Tamaño de \\
-Respuesta \\
-(Proxy de \\
-Tokens)\end{tabular}}} & \textbf{Análisis} \\
-\hline
-gemini-2.0-flash-exp:free & 1 min 38 seg & 45.6 KB & Rápido y detallado \\
-\hline
-deepseek-chat:free & 8 min 13 seg & 24.8 KB & \begin{tabular}[c]{@{}l@{}}Lento y moderadamente \\
-detallado\end{tabular} \\
-\hline
-deepseek-r1-0528:free & 18 min 49 seg & 16.1 KB & Muy lento y conciso \\
-\hline
-qwen-2.5-coder-32b-instruct:free & 4 min 54 seg & \textbf{49.2 KB} & \textbf{\begin{tabular}[c]{@{}l@{}}Velocidad media, \\
-respuesta más extensa\end{tabular}} \\
-\hline
-\end{tabular}%
-
+    \centering
+    \caption{Comparativa de Rendimiento y Consumo de Tokens}
+    \label{tab:rendimiento_coste}
+    \begin{tabular}{|l|c|c|l|}
+        \hline
+        \textbf{Modelo de IA}                   & \textbf{\makecell{Tiempo de \\ Análisis}} & \textbf{\makecell{Tamaño de \\ Respuesta \\ (Proxy de Tokens)}} & \textbf{Análisis} \\
+        \hline
+        gemini-2.0-flash-exp:free           & 1 min 38 seg                              & 45.6 KB                                                         & Rápido y detallado \\
+        \hline
+        deepseek-chat:free                  & 8 min 13 seg                              & 24.8 KB                                                         & \makecell[l]{Lento y moderadamente \\ detallado} \\
+        \hline
+        deepseek-r1-0528:free               & 18 min 49 seg                             & 16.1 KB                                                         & Muy lento y conciso \\
+        \hline
+        qwen-2.5-coder-32b-instruct:free    & 4 min 54 seg                              & 49.2 KB                                                & \makecell[l]{Velocidad media, \\ respuesta más extensa} \\
+        \hline
+    \end{tabular}
 \end{table}
 
 \paragraph{Discusión de los Resultados.}
@@ -312,12 +312,12 @@ Del análisis detallado de los resultados, se extraen las siguientes observacion
             \item \textbf{Snyk (SCA)}: Como se esperaba de una herramienta SCA líder, identificó con éxito la dependencia vulnerable en el el \texttt{pom.xml} (`jackson-databind`), proporcionando un listado exhaustivo de los 58 problemas de seguridad asociados a esa única dependencia. No obstante, su alcance no cubre el análisis del código fuente propio.
         \end{itemize}
 
-    \item \textbf{Rendimiento Holístico de los Modelos de IA}: El hallazgo más significativo es la capacidad de los modelos de IA para realizar un análisis \textbf{híbrido}, cubriendo tanto las responsabilidades de SAST como de SCA con una eficacia del 100\% en el entorno de prueba. Todos los modelos identificaron la totalidad de las 13 vulnerabilidades, demostrando una comprensión contextual del código y una capacidad para analizar las dependencias del proyecto. Esto representa una ventaja fundamental, ya que ofrecen una visión de seguridad unificada que tradicionalmente requeriría la integración de múltiples herramientas especializadas.
+    \item \textbf{Rendimiento Holístico de los Modelos de IA}: El hallazgo más significativo es la capacidad de los modelos de IA para realizar un análisis híbrido, cubriendo tanto las responsabilidades de SAST como de SCA con una eficacia del 100\% en el entorno de prueba. Todos los modelos identificaron la totalidad de las 13 vulnerabilidades, demostrando una comprensión contextual del código y una capacidad para analizar las dependencias del proyecto. Esto representa una ventaja fundamental, ya que ofrecen una visión de seguridad unificada que tradicionalmente requeriría la integración de múltiples herramientas especializadas.
 
     \item \textbf{Nuevos Criterios de Diferenciación}: Dado que todos los modelos de IA alcanzaron la máxima puntuación en detección, la diferenciación entre ellos ya no se basa en la cobertura, sino en otros factores cualitativos y cuantitativos:
         \begin{itemize}
             \item \textbf{Velocidad y Coste}: Como se observó previamente, existe un claro compromiso. Modelos como google/gemini-2.0-flash-exp:free ofrecen resultados casi instantáneos, mientras que otros como deepseek/deepseek-r1-0528:free son más lentos, lo que puede influir en la elección para distintos tipos de pipelines (CI vs. CD).
-            \item \textbf{Calidad del Reporte}: Aunque todos detectaron las vulnerabilidades, la calidad y claridad de las descripciones y, sobre todo, de las sugerencias de corrección, varía entre modelos. Este factor cualitativo es crucial para la "accionabilidad" de los resultados por parte de los desarrolladores.
+            \item \textbf{Calidad del Reporte}: Aunque todos detectaron las vulnerabilidades, la calidad y claridad de las descripciones y, sobre todo, de las sugerencias de corrección, varía entre modelos. Este factor cualitativo es crucial para la accionabilidad de los resultados por parte de los desarrolladores.
             \item \textbf{Análisis de Calidad de Código}: Además de la seguridad, modelos como deepseek-r1-0528:free también proporcionaron un análisis más rico sobre la calidad general del código, similar al de SonarQube, aportando un valor añadido.
         \end{itemize}
 
@@ -326,7 +326,7 @@ Del análisis detallado de los resultados, se extraen las siguientes observacion
 
 \subsection{Conclusión de la Evaluación}
 
-La evaluación empírica llevada a cabo en este trabajo permite extraer una conclusión fundamental: la integración de la Inteligencia Artificial en los pipelines de CI/CD para el análisis de seguridad no solo es una propuesta viable, sino que \textbf{supera de manera significativa la capacidad de las herramientas de análisis estático gratuitas, como SonarQube Community Edition, en la detección de vulnerabilidades de seguridad complejas}.
+La evaluación empírica llevada a cabo en este trabajo permite extraer una conclusión fundamental: la integración de la Inteligencia Artificial en los pipelines de CI/CD para el análisis de seguridad no solo es una propuesta viable, sino que supera de manera significativa la capacidad de las herramientas de análisis estático gratuitas, como SonarQube Community Edition, en la detección de vulnerabilidades de seguridad complejas.
 
 Mientras que SonarQube se mantiene como una herramienta indispensable para gobernar y mantener la calidad, la fiabilidad y la mantenibilidad del código base, los modelos de IA evaluados han demostrado llenar un vacío crítico en la estrategia de DevSecOps. Su capacidad para realizar un análisis semántico y contextual del código les permite identificar riesgos de seguridad de alto impacto que a menudo pasan desapercibidos para los analizadores basados en reglas estáticas.
 
@@ -363,10 +363,10 @@ El pipeline ejecutó las primeras etapas de manera secuencial y paralela, tal co
     \item Las etapas iniciales, \textbf{Checkout \& Build} y \textbf{Unit Test Reports}, se completaron con éxito. El código fue clonado, la aplicación fue empaquetada con Maven (\textbf{RF-02}), y los reportes de pruebas unitarias fueron procesados por Jenkins, sin embargo, una de las pruebas unitarias saltó una excepción debido a una vulnerabilidad de dependencia en el pom.xml, el cual fue detectada en el stage AI-Powered Analysis.
     \item La etapa \textbf{Static Analysis} se ejecutó, realizando sus tareas en paralelo para optimizar el tiempo.
     \item La etapa \textbf{AI-Powered Analysis} se completó satisfactoriamente, cumpliendo su objetivo principal (\textbf{RF-04}). El script de Python interactuó con la API de la IA y generó los artefactos cruciais: el reporte HTML para el desarrollador (`ai-analysis-report.html`) y el reporte JSON (`analysis-results.json`) para la automatización, cumpliendo así con \textbf{RF-05}.
-    \item La ejecución llegó a la etapa \textbf{Quality Gate}. Este es el punto de control automatizado que implementa la política de seguridad del pipeline. El script leyó el archivo `analysis-results.json` y, tal como se esperaba, encontró que el valor de `high_severity_vulnerabilities` era de 5. 
+    \item La ejecución llegó a la etapa \textbf{Quality Gate}. Este es el punto de control automatizado que implementa la política de seguridad del pipeline. El script leyó el archivo analysis-results.json y, tal como se esperaba, encontró que el valor de high\_severity\_vulnerabilities era de 5. 
 \end{enumerate}
 
-Debido a que este valor era mayor que el umbral de cero definido en la política, la condición del Quality Gate se activó y ejecutó el paso `error()`. Este comando detuvo inmediatamente el pipeline y lo marcó con el estado \textbf{FAILURE}, como se evidencia en la captura de la Figura \ref{fig:pipeline_general_fail}. Como resultado, las etapas posteriores —`Debug Path`, `Build Docker Image` y `Local Deploy`— nunca se ejecutaron.
+Debido a que este valor era mayor que el umbral de cero definido en la política, la condición del Quality Gate se activó y ejecutó el paso error(). Este comando detuvo inmediatamente el pipeline y lo marcó con el estado \textbf{FAILURE}, como se evidencia en la captura de la Figura \ref{fig:pipeline_general_fail}. Como resultado, las etapas posteriores Debug Path, Build Docker Image y Local Deploy nunca se ejecutaron.
 
 Este fallo controlado es un éxito rotundo para el experimento. Demuestra que el sistema funciona como un mecanismo de seguridad preventivo eficaz (cumpliendo \textbf{RF-06}), deteniendo físicamente la promoción de código inseguro a través del ciclo de vida de desarrollo.
 
@@ -377,19 +377,19 @@ A continuación, se explican los problemas más graves que encontró la IA y que
 
 \paragraph{Dependencia Vulnerable en `pom.xml` (Severidad: HIGH)}
 \begin{itemize}
-    \item \textbf{Hallazgo:} La IA revisó el archivo `pom.xml` y vio que se usaba la versión `2.9.8` de la librería `jackson-databind`. Avisó que esta versión es muy antigua y tiene fallos de seguridad graves (CVEs) que podrían permitir a un atacante ejecutar código en el servidor.
-    \item \textbf{Sugerencia de la IA:} La solución fue simple y directa: actualizar la librería a una versión más nueva y segura (como `2.16.1` o superior) en el archivo `pom.xml`.
+    \item \textbf{Hallazgo:} La IA revisó el archivo pom.xml y vio que se usaba la versión 2.9.8 de la librería jackson-databind. Avisó que esta versión es muy antigua y tiene fallos de seguridad graves (CVEs) que podrían permitir a un atacante ejecutar código en el servidor.
+    \item \textbf{Sugerencia de la IA:} La solución fue simple y directa: actualizar la librería a una versión más nueva y segura (como 2.16.1 o superior) en el archivo pom.xml.
 \end{itemize}
 
 \paragraph{Inyección SQL (Severidad: CRITICAL)}
 \begin{itemize}
-    \item \textbf{Hallazgo:} En el `WelcomeController`, la IA detectó que una consulta a la base de datos se estaba construyendo uniendo texto con datos que venían de un usuario, sin ninguna protección. Esto es un riesgo clásico de Inyección SQL.
-    \item \textbf{Sugerencia de la IA:} Recomendó usar "consultas preparadas" (`PreparedStatement`), que es la forma correcta y segura de hacerlo, e incluyó un ejemplo de código de cómo implementarlo.
+    \item \textbf{Hallazgo:} En el WelcomeController, la IA detectó que una consulta a la base de datos se estaba construyendo uniendo texto con datos que venían de un usuario, sin ninguna protección. Esto es un riesgo clásico de Inyección SQL.
+    \item \textbf{Sugerencia de la IA:} Recomendó usar consultas preparadas (PreparedStatement), que es la forma correcta y segura de hacerlo, e incluyó un ejemplo de código de cómo implementarlo.
 \end{itemize}
 
 \paragraph{Ejecución Remota de Código (RCE) (Severidad: CRITICAL)}
 \begin{itemize}
-    \item \textbf{Hallazgo:} El sistema identificó que una parte del código `ScriptEngine.eval()` ejecutaba comandos directamente de la entrada del usuario, lo que es un riesgo crítico.
+    \item \textbf{Hallazgo:} El sistema identificó que una parte del código ScriptEngine.eval() ejecutaba comandos directamente de la entrada del usuario, lo que es un riesgo crítico.
     \item \textbf{Sugerencia de la IA:} La recomendación fue eliminar esa función por completo, lo cual es la decisión más segura cuando una característica es tan peligrosa.
 \end{itemize}
 
@@ -410,10 +410,10 @@ A continuación, se explican los problemas más graves que encontró la IA y que
 El valor fundamental del prototipo no reside únicamente en la detección, sino en su capacidad para facilitar una remediación rápida y precisa. Con las instrucciones claras y los ejemplos de código proporcionados por el reporte de la IA, un desarrollador pudo proceder a corregir las 5 vulnerabilidades críticas identificadas. El proceso de remediación consistió en:
 \begin{itemize}
     \item Actualizar la versión de la dependencia `jackson-databind` en el archivo `pom.xml` a una versión segura.
-    \item Refactorizar el método `getUserInfo` en `WelcomeController.java` para utilizar `PreparedStatement`, eliminando así la vulnerabilidad de Inyección SQL.
-    \item Eliminar por completo los métodos inseguros `executeCode` (RCE) y `ping` (Command Injection).
-    \item Añadir la lógica de validación de rutas en el método `readFile` para prevenir el Path Traversal.
-    \item Externalizar las claves secretas (`DB_PASSWORD` y `API_KEY`), eliminándolas del código fuente y configurándolas como variables de entorno seguras.
+    \item Refactorizar el método `getUserInfo` en WelcomeController.java para utilizar PreparedStatement, eliminando así la vulnerabilidad de Inyección SQL.
+    \item Eliminar por completo los métodos inseguros executeCode (RCE) y ping (Command Injection).
+    \item Añadir la lógica de validación de rutas en el método readFile para prevenir el Path Traversal.
+    \item Externalizar las claves secretas (`DB\_PASSWORD` y `API\_KEY`), eliminándolas del código fuente y configurándolas como variables de entorno seguras.
 \end{itemize}
 
 Una vez aplicados estos cambios y subido el código corregido al repositorio de GitHub, el pipeline de Jenkins se ejecutó por segunda vez.
