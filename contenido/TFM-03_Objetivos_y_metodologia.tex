@@ -1,7 +1,9 @@
 \chapter{Objetivos y metodología de trabajo}\label{chap:objetivos_metodologia}
+
 Este capítulo es fundamental, ya que traduce la problemática y la visión general en metas concretas y un plan de acción detallado. Se define el propósito último del trabajo (objetivo general), se desglosa en pasos alcanzables y verificables (objetivos específicos) y se describe el enfoque metodológico que se seguirá para llevar a cabo la investigación y el desarrollo.
 
 \section{Objetivo general}\label{sec:objgeneral}
+
 El objetivo general de esta tesis de maestría es diseñar, implementar y evaluar un prototipo funcional que integre modelos de Inteligencia Artificial existentes dentro de pipelines de Integración Continua y Despliegue Continuo (CI/CD). El fin es detectar vulnerabilidades en microservicios desarrollados en Java y generar automáticamente sugerencias de mitigación contextualizadas para dichas vulnerabilidades.
 
 Al alcanzar este objetivo, se busca demostrar la viabilidad y el valor de utilizar la IA como un asistente inteligente para los desarrolladores en tareas de seguridad críticas dentro de un marco DevOps. El impacto esperado no es solo técnico (un prototipo funcional), sino también práctico y estratégico. Se espera contribuir a la mejora proactiva de la seguridad del software, a la automatización eficiente de procesos DevSecOps, a la aceleración del ciclo de desarrollo mediante la reducción del esfuerzo manual de corrección, y a la exploración de aplicaciones innovadoras de IA en la ingeniería de software. Este objetivo se alinea con la necesidad industrial de construir y operar sistemas de software de forma más rápida y segura.
@@ -23,9 +25,9 @@ Para lograr el objetivo general de manera estructurada y medible, se establecen 
     \end{itemize}
     Este es el núcleo de la funcionalidad propuesta.
     
-    \item \textbf{Automatizar el flujo completo en el pipeline CI/CD:} Asegurar que todo el proceso (Descarga de código $\rightarrow$ Compilación $\rightarrow$ Pruebas Unitarias $\rightarrow$ Análisis estático $\rightarrow$ Análisis mediante IA $\rightarrow$ Criterios de calidad $\rightarrow$ Despliegue del servicio) se ejecute de forma automática como parte integral del pipeline CI/CD elegido (por ejemplo, Jenkins, GitLab CI/CD, GitHub Actions). Este proceso se activaría, por ejemplo, en cada commit o merge request. El objetivo es demostrar la integración transparente en el flujo DevOps.
+    \item \textbf{Automatizar el flujo completo en el pipeline CI/CD:} Asegurar que todo el proceso (Descarga de código $\rightarrow$ Compilación $\rightarrow$ Pruebas Unitarias $\rightarrow$ Análisis estático $\rightarrow$ Análisis mediante IA $\rightarrow$ Criterios de calidad $\rightarrow$ Despliegue del servicio) se ejecute de forma automática como parte integral del pipeline CI/CD elegido. Este proceso se activaría, por ejemplo, en cada commit o merge request.
     
-    \item \textbf{Implementar la generación de reportes accionables:} Diseñar y desarrollar un mecanismo para generar reportes claros y concisos en formato HTML, que presenten las vulnerabilidades detectadas junto con las correspondientes sugerencias de mitigación proporcionadas por la IA. Estos reportes deben ser fácilmente accesibles como artefactos del pipeline para que los desarrolladores puedan revisarlos. El fin es crear un mecanismo de retroalimentaci\u00f3n efectivo.
+    \item \textbf{Implementar la generación de reportes accionables:} Diseñar y desarrollar un mecanismo para generar reportes claros y concisos en formato HTML, que presenten las vulnerabilidades detectadas junto con las correspondientes sugerencias de mitigación proporcionadas por la IA. Estos reportes deben ser fácilmente accesibles como artefactos del pipeline para que los desarrolladores puedan revisarlos.
     
     \item \textbf{Evaluar la efectividad y rendimiento del prototipo:} Diseñar y ejecutar un conjunto de experimentos utilizando microservicios Java de ejemplo con vulnerabilidades conocidas. Medir métricas clave como:
     \begin{itemize}
@@ -43,29 +45,29 @@ Para alcanzar los objetivos descritos de manera sistemática y rigurosa, se segu
 \begin{enumerate}
     \item \textbf{Fase 1: Investigación y Selección Tecnológica (Semanas 1-3)}
     \begin{itemize}
-        \item Análisis profundo de vulnerabilidades Java en microservicios: Revisión bibliográfica y análisis de bases de datos de vulnerabilidades (por ejemplo, OWASP Top 10, CWE) para identificar los tipos de fallos de seguridad más comunes y relevantes en el contexto de microservicios Java (tales como inyecciones, configuración insegura de Spring Boot/Jakarta EE, manejo de claves de API, autenticación/autorización distribuida).
-        \item Evaluación y selección de herramientas SAST/CI/CD: Análisis comparativo de herramientas SAST (SonarQube como principal candidato, evaluando alternativas si es necesario) y plataformas CI/CD (GitLab CI/CD, Jenkins, GitHub Actions). Se considerarán criterios como: capacidad de integración, calidad del análisis, formato de salida, comunidad/soporte y disponibilidad (dando prioridad a opciones de código abierto o con licencias académicas/gratuitas viables). Selección final de las herramientas base.
-        \item Exploración y selección de modelos de IA: Investigación detallada de modelos de IA. Se evaluarán aspectos como: capacidad de análisis de Java, calidad de generación de código/sugerencias, facilidad de integración (APIs, librerías), costes, licencias y documentación. Selección del modelo o modelos principales a integrar en el prototipo.
+        \item Análisis profundo de vulnerabilidades Java en microservicios: Revisión bibliográfica y análisis de bases de datos de vulnerabilidades (por ejemplo, OWASP Top 10, CWE) para identificar los tipos de fallos de seguridad más comunes y relevantes.
+        \item Evaluación y selección de herramientas SAST/CI/CD: Análisis comparativo de herramientas SAST y plataformas CI/CD. Selección final de las herramientas base.
+        \item Exploración y selección de modelos de IA: Investigación detallada de modelos de IA. Evaluación de capacidad de análisis de Java, calidad de generación, facilidad de integración y costes.
     \end{itemize}
     
     \item \textbf{Fase 2: Diseño de la Arquitectura y Casos de Prueba (Semanas 4-5)}
     \begin{itemize}
-        \item Diseño detallado de la arquitectura: Elaboración de diagramas de arquitectura (despliegue, componentes, flujo de datos) que muestren cómo interactuarán el repositorio de código, el servidor CI/CD, la herramienta SAST, el servicio/modelo de IA y el generador de reportes. Definición de las interfaces de comunicación (APIs, formatos de datos). Se considerarán aspectos como el manejo de errores, la seguridad en la comunicación con la IA (si es externa) y la escalabilidad conceptual.
-        \item Definición de casos de prueba: Desarrollo de un microservicio Java (por ejemplo, usando Spring Boot o Quarkus) que contengan deliberadamente un conjunto representativo de las vulnerabilidades identificadas en la Fase 1. Estos servirán como base para la implementación y validación. Se documentarán claramente las vulnerabilidades introducidas y su ubicación.
+        \item Diseño detallado de la arquitectura: Diagramas de despliegue, componentes y flujo de datos. Definición de interfaces de comunicación.
+        \item Definición de casos de prueba: Desarrollo de un microservicio Java con vulnerabilidades representativas documentadas.
     \end{itemize}
     
     \item \textbf{Fase 3: Desarrollo e Implementación del Prototipo (Semanas 6-10)}
     \begin{itemize}
-        \item Configuración del entorno CI/CD: Puesta en marcha de la plataforma CI/CD seleccionada y configuración del pipeline base para los microservicios de prueba.
-        \item Desarrollo del módulo de integración con IA: Creación de los scripts (por ejemplo, en Python, Groovy, o el lenguaje soportado por el CI/CD) que: analicen la salida de la herramienta SAST, identifiquen las secciones de código relevantes, interactúen con el modelo de IA seleccionado (llamadas API, inferencia local si aplica), y manejen las respuestas.
-        \item Desarrollo del módulo de generación de reportes: Implementación de la lógica para tomar las vulnerabilidades detectadas y las sugerencias de la IA, y generar un informe consolidado y legible (por ejemplo, HTML con resaltado de código, tablas resumen) que se archive como artefacto del pipeline.
-        \item Contenerización (Docker): Empaquetar los microservicios de prueba y, potencialmente, algunos componentes del sistema usando Docker. Esto asegurará la reproducibilidad y facilitará el despliegue en el entorno CI/CD.
+        \item Configuración del entorno CI/CD: Puesta en marcha de la plataforma elegida y configuración del pipeline base.
+        \item Desarrollo del módulo de integración con IA: Creación de los scripts necesarios para orquestar SAST, llamadas a la IA y procesamiento de respuestas.
+        \item Desarrollo del módulo de generación de reportes: Implementación de la lógica para generar informes HTML como artefactos del pipeline.
+        \item Contenerización: Empaquetado de microservicios y componentes con Docker para reproducibilidad.
     \end{itemize}
     
     \item \textbf{Fase 4: Validación y Evaluación (Semanas 11-12)}
     \begin{itemize}
-        \item Ejecución de pruebas: Ejecutar el pipeline CI/CD completo sobre los microservicios de prueba definidos en la Fase 2. Recopilar los reportes generados.
-        \item Análisis cuantitativo: Medir métricas clave: número de vulnerabilidades detectadas por SAST, número de sugerencias generadas por la IA, y tasa de éxito (sugerencias generadas / vulnerabilidades detectadas).
-        \item Análisis cualitativo: Evaluar manualmente la calidad, corrección y utilidad de las sugerencias de mitigación generadas por la IA. Comparar las sugerencias con las soluciones conocidas o esperadas para las vulnerabilidades introducidas.
+        \item Ejecución de pruebas: Ejecución del pipeline completo sobre los microservicios de prueba.
+        \item Análisis cuantitativo: Medición de métricas clave (detección, sugerencias, tiempo de ejecución).
+        \item Análisis cualitativo: Evaluación manual de la calidad y utilidad de las sugerencias.
     \end{itemize}
 \end{enumerate}
