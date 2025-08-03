@@ -32,18 +32,13 @@ Para contextualizar la aportación de esta tesis, se realizó un análisis compa
 \hline
 \textbf{Característica} & 
 \textbf{Solución Propuesta (Tesis)} & 
-\textbf{SonarQube} & 
-\textbf{Snyk} \\ \hline
+\textbf{SonarQube} \cite{sonarqube_editions} & 
+\textbf{Snyk} \cite{snyk_plans} \\ \hline
 
 \textbf{Enfoque Principal} & 
 Asistencia para mitigación: genera explicaciones y código de solución usando IA. & 
 Detección y seguimiento: identifica bugs y vulnerabilidades (SAST). & 
 Seguridad integral: Fuerte en SAST, SCA, contenedores e IaC. \\ \hline
-
-\textbf{Sugerencia de Mitigación con IA} & 
-Componente central para análisis y generación de sugerencias contextuales. & 
-No (proporciona información sobre la vulnerabilidad, no sugerencias generadas por IA). & 
-No (ofrece correcciones automáticas predefinidas, pero no basadas en IA generativa). \\ \hline
 
 \textbf{Integración CI/CD} & 
 Diseñada para operar en cualquier pipeline compatible con scripts. & 
@@ -54,6 +49,11 @@ Integración nativa con múltiples plataformas y herramientas de desarrollo. \\ 
 Contenedor Docker ligero. Sin servidor dedicado. & 
 Requiere servidor SonarQube persistente con BD. & 
 Principalmente SaaS (gestionado por Snyk), con opciones on-premise. \\ \hline
+
+\textbf{Inteligencia Artificial} & 
+Componente central. Uso de IA generativa para explicaciones y sugerencias de código contextuales. & 
+Incorporada en ediciones de pago para generar sugerencias de corrección de código (AI CodeFix). & 
+Utilizada para análisis de alcanzabilidad y ofrecer correcciones automáticas predefinidas (DeepCode AI), no con un enfoque generativo. \\ \hline
 
 \textbf{Coste} & 
 Código abierto (costo de infraestructura y uso de API de IA). & 
@@ -68,8 +68,8 @@ Comercial (con un plan gratuito para desarrolladores y proyectos open source). \
 El análisis comparativo de la Tabla \ref{tab:comparativa_sistemas} revela que las tres herramientas operan con filosofías distintas. 
 \begin{itemize}
     \item \textbf{SonarQube} se posiciona como una plataforma centralizada de gobernanza de la calidad y seguridad del código. Su fortaleza radica en ofrecer un panel de control exhaustivo para gestionar la deuda técnica y seguir la evolución de un proyecto a lo largo del tiempo.
-    \item \textbf{GitHub Advanced Security} se enfoca en la prevención temprana, integrándose de manera nativa y fluida en el flujo de trabajo del desarrollador dentro de GitHub. Su objetivo es evitar que las vulnerabilidades lleguen a la base de código principal, proporcionando retroalimentación directamente en las Pull Requests.
-    \item La \textbf{solución de esta tesis}, en cambio, no busca competir en la detección exhaustiva ni en la integración con la plataforma de un proveedor específico. Su nicho y principal innovación residen en el paso posterior a la detección: el uso explícito de la IA generativa para \textbf{acelerar la corrección humana}. Actúa como un complemento, un traductor inteligente que convierte un reporte de vulnerabilidad en una explicación clara y una solución tangible, reduciendo la fricción y la carga cognitiva del desarrollador.
+    \item \textbf{Snyk} adopta un enfoque centrado en el desarrollador (\textit{developer-first}), integrándose de manera nativa en sus herramientas (IDE, CLI, repositorios) para ofrecer una cobertura de seguridad amplia (código, dependencias, contenedores, IaC) y facilitar la corrección temprana de vulnerabilidades.
+    \item La \textbf{solución de esta tesis}, en cambio, no busca competir en la detección exhaustiva ni en la integración profunda con el ecosistema de un proveedor. Su nicho y principal innovación residen en el paso posterior a la detección: el uso explícito de la IA generativa para \textbf{acelerar la corrección humana}. Actúa como un complemento, un traductor inteligente que convierte un reporte de vulnerabilidad en una explicación clara y una solución tangible, reduciendo la fricción y la carga cognitiva del desarrollador.
 \end{itemize}
 
 En resumen, mientras las herramientas comerciales se centran en la detección y prevención, este trabajo explora el potencial de la IA para democratizar y acelerar la fase de mitigación, un área con un significativo potencial de mejora.
