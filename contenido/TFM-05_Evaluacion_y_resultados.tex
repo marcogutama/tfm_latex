@@ -156,7 +156,7 @@ Los modelos de IA, todos accesibles a través de la plataforma OpenRouter, fuero
 \begin{itemize}
 \item \textbf{SonarQube Community Edition 9.9}: Representa la línea base para el Análisis Estático de Seguridad de
 Aplicaciones (SAST) y la calidad del código. Es una de las herramientas más utilizadas en la industria para el análisis del código fuente propio.
-\item \textbf{Snyk Open Source}: Representa la línea base para el Análisis de Composición de Software (SCA). Se utilizó la funcionalidad disponible en su plan gratuito, que se enfoca en detectar vulnerabilidades en dependencias de terceros. Es pertinente mencionar que Snyk también ofrece una solución SAST comercial (\textit{Snyk Code}), pero sus capacidades completas forman parte de sus planes de pago y no fueron objeto de esta evaluación \cite{snyk_plans}.
+\item \textbf{Snyk (Plan Gratuito)}: Representa una solución de seguridad integral. Se utilizaron dos de sus capacidades principales, ambas disponibles en su plan gratuito: \begin{itemize}    \item \textbf{Snyk Open Source (SCA)}: Para el Análisis de Composición de Software, enfocado en detectar vulnerabilidades en dependencias de terceros a través del comando `snyk test`.    \item \textbf{Snyk Code (SAST)}: Para el Análisis Estático de Seguridad del código fuente propio, a través del comando `snyk code test`.\end{itemize}
 \end{itemize}
 
 \subsection{Análisis Comparativo de Resultados}
@@ -176,34 +176,34 @@ Cada modelo de IA y las herramientas de referencia analizaron el proyecto. La si
 \textbf{Vulnerabilidad} & \textbf{SonarQube} & \textbf{Snyk (Free)} & \textbf{Gemini 2.0} & \textbf{DS Chat} & \textbf{DS R1} & 
 \textbf{Qwen 2.5} \\
 \hline
-Hardcoded Secret (Password) & \cmark & N/A & \cmark & \cmark & \cmark & \cmark \\
+Hardcoded Secret (Password) & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Hardcoded Secret (API Key) & \cmark & N/A & \cmark & \cmark & \cmark & \cmark \\
+Hardcoded Secret (API Key) & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Cross-Site Scripting (XSS) & \xmark & N/A & \cmark & \cmark & \cmark & \cmark \\
+Cross-Site Scripting (XSS) & \xmark & \cmark & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Remote Code Execution (RCE) & \xmark & N/A & \cmark & \cmark & \cmark & \cmark \\
+Remote Code Execution (RCE) & \xmark & \cmark & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Path Traversal & \xmark & N/A & \cmark & \cmark & \cmark & \cmark \\
+Path Traversal & \xmark & \cmark & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Inyección SQL (SQLi) & \xmark & N/A & \cmark & \cmark & \cmark & \cmark \\
+Inyección SQL (SQLi) & \xmark & \cmark & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Inyección de Comandos & \xmark & N/A & \cmark & \cmark & \cmark & \cmark \\
+Inyección de Comandos & \xmark & \cmark & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Deserialización Insegura & \xmark & N/A & \cmark & \cmark & \cmark & \cmark \\
+Deserialización Insegura & \xmark & \cmark & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Logs con Datos Sensibles & \xmark & N/A & \cmark & \cmark & \cmark & \cmark \\
+Logs con Datos Sensibles & \xmark & \xmark & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Uso de Criptografía Débil (Hash) & \xmark & N/A & \cmark & \cmark & \cmark & \cmark \\
+Uso de Criptografía Débil (Hash) & \xmark & \cmark & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Cifrado Simétrico Débil & \cmark & N/A & \cmark & \cmark & \cmark & \cmark \\
+Cifrado Simétrico Débil & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark \\
 \hline
-Exposición de Error (Stacktrace) & \xmark & N/A & \cmark & \cmark & \cmark & \cmark \\
+Exposición de Error (Stacktrace) & \xmark & \xmark & \cmark & \cmark & \cmark & \cmark \\
 \hline
 Dependencia Vulnerable (pom.xml) & \xmark & \cmark & \cmark & \cmark & \cmark & \cmark \\
 \hline
 \hline
-\textbf{Total Código Fuente (12)} & 3 & N/A & 12 & 12 & 12 & 12 \\
+\textbf{Total Código Fuente (12)} & 3 & 10 & 12 & 12 & 12 & 12 \\
 \hline
 \textbf{Total Dependencias (1)} & 0 & 1 & 1 & 1 & 1 & 1 \\
 \hline
@@ -309,7 +309,7 @@ Del análisis detallado de los resultados, se extraen las siguientes observacion
     \item \textbf{Rendimiento de las Herramientas de Referencia (Baselines)}: Las herramientas especializadas demostraron ser eficaces en sus respectivos dominios, pero limitadas fuera de ellos.
         \begin{itemize}
             \item \textbf{SonarQube (SAST)}: Detectó 3 de las 12 vulnerabilidades presentes en el código fuente, enfocándose en patrones evidentes como las claves embebidas. Sin embargo, no identificó ninguna vulnerabilidad contextual (SQLi, XSS) ni la dependencia vulnerable en el \texttt{pom.xml}.
-            \item \textbf{Snyk (SCA)}: Como se esperaba de una herramienta SCA líder, identificó con éxito la dependencia vulnerable en el el \texttt{pom.xml} (`jackson-databind`), proporcionando un listado exhaustivo de los 58 problemas de seguridad asociados a esa única dependencia. No obstante, su alcance no cubre el análisis del código fuente propio.
+            \item \textbf{Snyk (SAST y SCA)}: Demostró una alta eficacia en ambos frentes. Su motor SAST (`Snyk Code`) detectó 10 de las 12 vulnerabilidades del código fuente, fallando únicamente en la detección de logs con datos sensibles y la exposición de errores. Su motor SCA (`Snyk Open Source`) identificó correctamente la dependencia vulnerable en el \texttt{pom.xml}.
         \end{itemize}
 
     \item \textbf{Rendimiento Holístico de los Modelos de IA}: El hallazgo más significativo es la capacidad de los modelos de IA para realizar un análisis híbrido, cubriendo tanto las responsabilidades de SAST como de SCA con una eficacia del 100\% en el entorno de prueba. Todos los modelos identificaron la totalidad de las 13 vulnerabilidades, demostrando una comprensión contextual del código y una capacidad para analizar las dependencias del proyecto. Esto representa una ventaja fundamental, ya que ofrecen una visión de seguridad unificada que tradicionalmente requeriría la integración de múltiples herramientas especializadas.
