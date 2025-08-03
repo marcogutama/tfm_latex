@@ -22,58 +22,47 @@ El prototipo funcional, orquestado en Jenkins y utilizando un `Jenkinsfile` como
 
 \subsection{Análisis Comparativo}
 
-Para contextualizar la aportación de esta tesis, se realizó un análisis comparativo entre la solución propuesta y dos herramientas de seguridad reconocidas en la industria: SonarQube y GitHub Advanced Security. Esta comparación permite resaltar las diferencias en filosofía, enfoque y aplicabilidad de cada solución.
+Para contextualizar la aportación de esta tesis, se realizó un análisis comparativo entre la solución propuesta y las herramientas de seguridad que se utilizaron como referencia en la evaluación: SonarQube y Snyk. Esta comparación permite resaltar las diferencias en filosofía, enfoque y aplicabilidad de cada solución.
 
 \begin{table}[h!]
 \centering
-\caption{Tabla Comparativa: Solución Propuesta vs. Herramientas de Mercado}
+\caption{Tabla Comparativa: Solución Propuesta vs. Herramientas de Evaluación}
 \label{tab:comparativa_sistemas}
 \begin{tabular}{|p{2.6cm}|p{3.9cm}|p{3.9cm}|p{3.9cm}|}
 \hline
 \textbf{Característica} & 
 \textbf{Solución Propuesta (Tesis)} & 
-\textbf{SonarQube (Community Edition)} \cite{sonarqube_editions} & 
-\textbf{GitHub Advanced Security (GHAS)} \cite{ghas_docs} \\ \hline
+\textbf{SonarQube} & 
+\textbf{Snyk} \\ \hline
 
-\textbf{Facilidad de Uso} & 
-Reporte HTML unificado para acción inmediata. & 
-Dashboard completo pero denso. & 
-Integración nativa en GitHub UI (PRs, Security). \\ \hline
+\textbf{Enfoque Principal} & 
+Asistencia para mitigación: genera explicaciones y código de solución usando IA. & 
+Detección y seguimiento: identifica bugs y vulnerabilidades (SAST). & 
+Seguridad integral: Fuerte en SAST, SCA, contenedores e IaC. \\ \hline
 
-\textbf{Coste} & 
-Prácticamente nulo (código abierto y APIs gratuitas). & 
-Gratuito (Community Ed.). Ediciones comerciales con coste. & 
-Incluido en GitHub Enterprise o add-on de pago. Gratuito para repos públicos. \\ \hline
+\textbf{Sugerencia de Mitigación con IA} & 
+Componente central para análisis y generación de sugerencias contextuales. & 
+No (proporciona información sobre la vulnerabilidad, no sugerencias generadas por IA). & 
+No (ofrece correcciones automáticas predefinidas, pero no basadas en IA generativa). \\ \hline
 
-\textbf{Open Source} & 
-Sí, completamente. & 
-Open source (LGPL v3), funciones avanzadas propietarias. & 
-No, producto comercial propietario. \\ \hline
-
-\textbf{Licencia} & Licencia MIT. & LGPL v3. & Comercial. \\ \hline
-
-\textbf{Velocidad} & 
-Rápido. IA añade segundos/minutos al pipeline. & 
-Rápido, depende de infraestructura gestionada. & 
-Rápido, optimizado por GitHub. \\ \hline
+\textbf{Integración CI/CD} & 
+Diseñada para operar en cualquier pipeline compatible con scripts. & 
+Plugins para las principales plataformas de CI/CD. & 
+Integración nativa con múltiples plataformas y herramientas de desarrollo. \\ \hline
 
 \textbf{Infraestructura} & 
 Contenedor Docker ligero. Sin servidor dedicado. & 
 Requiere servidor SonarQube persistente con BD. & 
-Totalmente gestionado por GitHub (SaaS). \\ \hline
+Principalmente SaaS (gestionado por Snyk), con opciones on-premise. \\ \hline
 
-\textbf{Enfoque Principal} & 
-Asistencia para mitigación: genera explicaciones y código de solución. & 
-Detección y seguimiento: identifica bugs y vulnerabilidades. & 
-Prevención integrada: CodeQL (SAST), Secret Scanning, Dependency Review. \\ \hline
-
-\textbf{Inteligencia Artificial} & 
-Componente central para análisis y generación de sugerencias. & 
-Incorporada en ediciones de pago para análisis avanzado. & 
-Usada para Secret Scanning y Copilot Autofix. \\ \hline
+\textbf{Coste} & 
+Código abierto (costo de infraestructura y uso de API de IA). & 
+Comercial (con una edición gratuita \textit{Community}). & 
+Comercial (con un plan gratuito para desarrolladores y proyectos open source). \\ \hline
 
 \end{tabular}
 \end{table}
+
 
 
 El análisis comparativo de la Tabla \ref{tab:comparativa_sistemas} revela que las tres herramientas operan con filosofías distintas. 
