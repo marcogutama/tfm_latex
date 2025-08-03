@@ -303,41 +303,38 @@ La Tabla \ref{tab:rendimiento_coste} revela un interesante equilibrio entre velo
 Este análisis cuantitativo es fundamental para la toma de decisiones en un entorno real. Un equipo podría optar por usar un modelo rápido y económico como \texttt{google/gemini-2.0-flash-exp:free} para las revisiones en cada commit, y reservar el uso de un modelo más lento pero potencialmente más exhaustivo en sus explicaciones para los escaneos nocturnos o previos al despliegue.
 
 
+\subsection{Discusión General y Conclusiones de la Evaluación}
+
 Del análisis detallado de los resultados, se extraen las siguientes observaciones clave:
 
 \begin{itemize}
-    \item \textbf{Rendimiento de las Herramientas de Referencia (Baselines)}: Las herramientas especializadas demostraron ser eficaces en sus respectivos dominios, pero limitadas fuera de ellos.
+    \item \textbf{Rendimiento de las Herramientas de Referencia (Baselines)}: Las herramientas especializadas demostraron ser eficaces en sus respectivos dominios, pero con diferentes niveles de cobertura.
         \begin{itemize}
-            \item \textbf{SonarQube (SAST)}: Detectó 3 de las 12 vulnerabilidades presentes en el código fuente, enfocándose en patrones evidentes como las claves embebidas. Sin embargo, no identificó ninguna vulnerabilidad contextual (SQLi, XSS) ni la dependencia vulnerable en el \texttt{pom.xml}.
-            \item \textbf{Snyk (SAST y SCA)}: Demostró una alta eficacia en ambos frentes. Su motor SAST (`Snyk Code`) detectó 10 de las 12 vulnerabilidades del código fuente, fallando únicamente en la detección de logs con datos sensibles y la exposición de errores. Su motor SCA (`Snyk Open Source`) identificó correctamente la dependencia vulnerable en el \texttt{pom.xml}.
+            \item \textbf{SonarQube (SAST)}: Detectó 3 de las 12 vulnerabilidades del código fuente, enfocándose en patrones de calidad y seguridad evidentes (como las claves embebidas), pero no identificó vulnerabilidades contextuales complejas (SQLi, XSS) ni la dependencia vulnerable. Su valor principal reside en la gobernanza de la calidad del código.
+            \item \textbf{Snyk (SAST y SCA)}: Demostró una alta eficacia en ambos frentes. Su motor SAST (`Snyk Code`) detectó 10 de las 12 vulnerabilidades del código fuente, fallando únicamente en la detección de logs con datos sensibles y la exposición de errores. Su motor SCA (`Snyk Open Source`) identificó correctamente la dependencia vulnerable en el `pom.xml`. Esto la posiciona como una herramienta de seguridad muy robusta.
         \end{itemize}
 
-    \item \textbf{Rendimiento Holístico de los Modelos de IA}: El hallazgo más significativo es la capacidad de los modelos de IA para realizar un análisis híbrido, cubriendo tanto las responsabilidades de SAST como de SCA con una eficacia del 100\% en el entorno de prueba. Todos los modelos identificaron la totalidad de las 13 vulnerabilidades, demostrando una comprensión contextual del código y una capacidad para analizar las dependencias del proyecto. Esto representa una ventaja fundamental, ya que ofrecen una visión de seguridad unificada que tradicionalmente requeriría la integración de múltiples herramientas especializadas.
+    \item \textbf{Rendimiento Holístico de los Modelos de IA}: El hallazgo más significativo es la capacidad de los modelos de IA para realizar un análisis híbrido, cubriendo tanto las responsabilidades de SAST como de SCA con una eficacia del 100\% en el entorno de prueba. Todos los modelos identificaron la totalidad de las 13 vulnerabilidades, superando incluso la cobertura de Snyk y demostrando una comprensión contextual superior.
 
-    \item \textbf{Nuevos Criterios de Diferenciación}: Dado que todos los modelos de IA alcanzaron la máxima puntuación en detección, la diferenciación entre ellos ya no se basa en la cobertura, sino en otros factores cualitativos y cuantitativos:
+    \item \textbf{Nuevos Criterios de Diferenciación: Detección vs. Asistencia}: Dado que tanto la IA como Snyk muestran una alta capacidad de detección, el criterio de diferenciación se desplaza. La pregunta ya no es solo \textit{¿qué herramienta encuentra más fallos?}, sino \textit{¿qué herramienta ayuda mejor al desarrollador a corregirlos?} Aquí es donde la IA generativa aporta un valor único, al proporcionar explicaciones detalladas y sugerencias de código contextualizadas, un enfoque más pedagógico que el de las herramientas tradicionales.
+
+    \item \textbf{Complementariedad Re-evaluada}: La estrategia de seguridad en un pipeline moderno debe ser vista como un sistema de capas.
         \begin{itemize}
-            \item \textbf{Velocidad y Coste}: Como se observó previamente, existe un claro compromiso. Modelos como google/gemini-2.0-flash-exp:free ofrecen resultados casi instantáneos, mientras que otros como deepseek/deepseek-r1-0528:free son más lentos, lo que puede influir en la elección para distintos tipos de pipelines (CI vs. CD).
-            \item \textbf{Calidad del Reporte}: Aunque todos detectaron las vulnerabilidades, la calidad y claridad de las descripciones y, sobre todo, de las sugerencias de corrección, varía entre modelos. Este factor cualitativo es crucial para la accionabilidad de los resultados por parte de los desarrolladores.
-            \item \textbf{Análisis de Calidad de Código}: Además de la seguridad, modelos como deepseek-r1-0528:free también proporcionaron un análisis más rico sobre la calidad general del código, similar al de SonarQube, aportando un valor añadido.
+            \item \textbf{Capa 1 (Calidad):} SonarQube sigue siendo fundamental para aplicar un conjunto de reglas de código de forma rápida y consistente, manteniendo la salud general del código.
+            \item \textbf{Capa 2 (Detección):} Herramientas como Snyk ofrecen una detección de seguridad SAST y SCA muy competente y fiable, actuando como una red de seguridad robusta.
+            \item \textbf{Capa 3 (Asistencia y Aceleración):} La IA generativa, como la implementada en esta tesis, se posiciona como una capa superior. No solo detecta, sino que acelera la remediación, reduce la carga cognitiva del desarrollador y sirve como una herramienta de aprendizaje continuo, mejorando las capacidades de seguridad del equipo.
         \end{itemize}
-
-    \item \textbf{Complementariedad Re-evaluada}: La idea de complementariedad sigue siendo válida, pero con un nuevo matiz. SonarQube es fundamental para aplicar un conjunto de reglas de código de forma rápida y consistente. La IA, por su parte, no solo complementa, sino que asume el rol principal en la detección de vulnerabilidades de seguridad, ofreciendo una cobertura que antes solo era posible con herramientas comerciales muy costosas o revisiones manuales exhaustivas.
 \end{itemize}
 
-\subsection{Conclusión de la Evaluación}
+La evaluación empírica llevada a cabo en este trabajo permite extraer una conclusión fundamental: la integración de la Inteligencia Artificial en los pipelines de CI/CD para el análisis de seguridad no solo es viable, sino que representa la siguiente evolución en las prácticas de DevSecOps, yendo más allá de la simple detección para enfocarse en la asistencia inteligente.
 
-La evaluación empírica llevada a cabo en este trabajo permite extraer una conclusión fundamental: la integración de la Inteligencia Artificial en los pipelines de CI/CD para el análisis de seguridad no solo es una propuesta viable, sino que supera de manera significativa la capacidad de las herramientas de análisis estático gratuitas, como SonarQube Community Edition, en la detección de vulnerabilidades de seguridad complejas.
+Mientras que herramientas como SonarQube son indispensables para la gobernanza de la calidad y Snyk ofrece una detección de vulnerabilidades SAST y SCA muy sólida, los modelos de IA evaluados han demostrado un potencial superior en dos áreas clave:
+\begin{enumerate}
+    \item \textbf{Cobertura de Detección Holística:} Los modelos de IA fueron los únicos capaces de identificar el 100\% de las vulnerabilidades de código y de dependencias en el entorno de prueba, demostrando una capacidad de análisis contextual que supera a las herramientas de referencia.
+    \item \textbf{Asistencia para la Remediación:} El valor más significativo de la IA no reside en su capacidad de detección, sino en la calidad de la asistencia que proporciona. Al generar explicaciones claras y fragmentos de código directamente aplicables, la IA reduce drásticamente el tiempo y el esfuerzo que los desarrolladores deben invertir en investigar y corregir vulnerabilidades, convirtiendo un reporte de seguridad en un plan de acción concreto.
+\end{enumerate}
 
-Mientras que SonarQube se mantiene como una herramienta indispensable para gobernar y mantener la calidad, la fiabilidad y la mantenibilidad del código base, los modelos de IA evaluados han demostrado llenar un vacío crítico en la estrategia de DevSecOps. Su capacidad para realizar un análisis semántico y contextual del código les permite identificar riesgos de seguridad de alto impacto que a menudo pasan desapercibidos para los analizadores basados en reglas estáticas.
-
-La elección final de la herramienta o modelo a integrar dependerá de los objetivos específicos y las restricciones del pipeline de cada organización:
-\begin{itemize}
-    \item \textbf{Para Calidad de Código y Mantenibilidad}: SonarQube Community sigue siendo la herramienta de referencia indiscutible.
-    \item \textbf{Para Máxima Precisión y Cobertura en Seguridad}: El modelo deepseek-r1-0528 demostró ser la opción más segura y exhaustiva, ideal para ejecuciones en pipelines de despliegue a producción o en escaneos de seguridad programados y profundos donde la cobertura total es el objetivo principal.
-    \item \textbf{Para un Balance Óptimo entre Seguridad y Agilidad en CI/CD}: Los modelos gemini-2.0-flash-exp y deepseek-chat ofrecen un excelente compromiso, detectando la gran mayoría de las vulnerabilidades críticas en un tiempo de ejecución que se adapta bien a un pipeline de desarrollo activo.
-\end{itemize}
-
-En definitiva, una estrategia de DevSecOps madura debería considerar un enfoque híbrido, utilizando SonarQube para establecer una base sólida de calidad de código y complementándolo con un modelo de IA para realizar un análisis de seguridad contextual y profundo, automatizando así una defensa en profundidad directamente en el ciclo de vida del desarrollo.
+En definitiva, una estrategia de DevSecOps madura debería considerar un enfoque híbrido y por capas. Utilizar SonarQube para la calidad, apoyarse en herramientas robustas como Snyk para una detección fiable, y complementar el ecosistema con un sistema de asistencia basado en IA para acelerar la corrección y mejorar las habilidades del equipo de desarrollo. Este trabajo demuestra que el futuro de la seguridad en el desarrollo de software no está solo en encontrar más fallos, sino en solucionarlos de manera más rápida, eficiente e inteligente.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FIN DEL CAPÍTULO 4
@@ -349,7 +346,7 @@ Para la validación empírica de la solución, se diseñó una prueba específic
 
 El modelo de IA seleccionado para esta prueba fue \texttt{gemini-2.0-flash-exp}. Esta elección se justifica por su rendimiento superior en la evaluación comparativa (sección \ref{subsec:analisis_comparativo_resultados}), donde demostró el mejor equilibrio entre precisión, calidad de las sugerencias y eficiencia.
 
-Con el entorno CI/CD completamente automatizado, la ejecución del pipeline se activó tras realizar un `commit` en el repositorio, cumpliendo con el requisito \textbf{RF-01}. La vista general del proceso, con las etapas completadas y el punto de fallo, se puede apreciar en la Figura \ref{fig:pipeline_general_fail_alt}.
+Con el entorno CI/CD completamente automatizado, la ejecución del pipeline se activó tras realizar un `commit` en el repositorio, cumpliendo con el requisito \textbf{RF-01}. La vista general del proceso, con las etapas completadas y el punto de fallo, se puede apreciar en la Figura \ref{fig:pipeline_general_fail}.
 
 \begin{figure}[h]
 \centering
