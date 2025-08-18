@@ -1,0 +1,198 @@
+
+--- SLIDE 1: Portada ---
+
+Título: [Título completo de su TFM]
+
+Contenido:
+    *   Nombres: Marco [Apellido] y Jonna [Apellido]
+    *   Texto: Trabajo de Fin de Máster para optar al título de Máster en Ingeniería DevOps
+    *   (Añadir Logo de la UNIR en la diapositiva)
+
+Notas del Orador (Guion):
+    *   (Marco): "Buenos días a todos los miembros del tribunal, tutor y público presente. Mi nombre es Marco..."
+    *   (Jonna): "...y mi nombre es Jonna. Hoy vamos a defender nuestro Trabajo de Fin de Máster titulado [Título completo del TFM]."
+    *   (Marco): "En este proyecto, hemos abordado el desafío de modernizar el ciclo de vida de desarrollo de software a través de la implementación de una cultura y un conjunto de prácticas DevOps, con un enfoque innovador en la seguridad."
+
+--- SLIDE 2: El Salto Evolutivo en DevSecOps ---
+
+Título: El Salto Evolutivo en DevSecOps: IA en el Pipeline CI/CD
+
+Contenido:
+    *   Contexto: La agilidad de DevOps y Microservicios ha aumentado la complejidad y la superficie de ataque.
+    *   El Problema con la Seguridad Tradicional (SAST):
+        *   Generan un alto volumen de "ruido" (falsos positivos).
+        *   Provocan "fatiga de alertas" en los equipos de desarrollo.
+        *   Carecen de contexto para ofrecer soluciones accionables.
+        *   Ralentizan el ciclo de entrega, actuando como un cuello de botella.
+    *   Nuestra Propuesta Innovadora: Integrar Inteligencia Artificial en el pipeline para un análisis de vulnerabilidades más inteligente y proactivo.
+
+Notas del Orador (Guion):
+    *   (Marco): "Nuestro trabajo parte de una realidad de la industria: DevOps y los microservicios son el estándar para entregar software con agilidad. Sin embargo, esta velocidad ha traído un desafío crítico: ¿cómo mantenemos la seguridad sin frenar el desarrollo?"
+    *   (Jonna): "Las herramientas actuales de análisis de seguridad, conocidas como SAST, son un primer paso, pero tienen limitaciones significativas. Generan un exceso de alertas, muchos de ellos falsos positivos, lo que causa una 'fatiga' en los desarrolladores que terminan por ignorarlas. Además, no ofrecen un contexto claro para solucionar los problemas, convirtiéndose en un cuello de botella."
+    *   (Marco): "Aquí es donde reside la innovación de nuestra tesis. Proponemos dar un salto evolutivo en DevSecOps. En lugar de depender únicamente de reglas estáticas, planteamos la integración de modelos de Inteligencia Artificial directamente en el pipeline de CI/CD. El objetivo no es solo detectar vulnerabilidades, sino hacerlo de una forma más inteligente, contextualizada y accionable para el desarrollador."
+
+--- SLIDE 3: Estado del Arte y la Oportunidad Detectada ---
+
+Título: Estado del Arte: De las Alertas Ruidosas a la Asistencia Inteligente
+
+Contenido:
+
+    1. Herramientas Tradicionales (SAST/DAST/SCA)
+        *   Foco: Detección basada en reglas y firmas.
+        *   Fortaleza: Maduras y efectivas para vulnerabilidades conocidas.
+        *   Debilidad Crítica: Generan fatiga por alertas, alto "ruido" (falsos positivos) y ofrecen bajo contexto para la solución.
+
+    2. Aplicaciones de IA Emergentes
+        *   Foco: Principalmente en generación de código (ej. GitHub Copilot) y reparación automática experimental (APR).
+        *   Fortaleza: Demuestran una gran capacidad de "razonamiento" sobre el código.
+        *   Debilidad Crítica: La reparación automática (APR) aún no es fiable para entornos de producción y genera desconfianza en los equipos.
+
+    3. Nuestra Contribución (El Hueco Identificado)
+        *   Foco: Asistencia Inteligente para la Mitigación.
+        *   Fortaleza: Combina el poder de razonamiento de la IA con el control final del desarrollador.
+        *   Novedad: El sistema no busca reparar código de forma arriesgada, sino generar sugerencias de mitigación que sean contextualizadas y explicadas, empoderando al desarrollador.
+
+Notas del Orador (Guion):
+    *   (Jonna): "Para entender la originalidad de nuestro trabajo, analizamos el estado del arte, que se mueve en dos realidades paralelas. Por un lado, tenemos las herramientas de seguridad tradicionales como SonarQube. Son maduras y buenas para detectar patrones conocidos, pero su gran debilidad, como confirman múltiples estudios, es el aspecto humano: abruman a los desarrolladores con alertas de bajo contexto, creando una barrera."
+    *   (Marco): "Por otro lado, tenemos la revolución de la Inteligencia Artificial con los LLMs. La investigación actual se ha centrado en dos áreas: la generación de código, como GitHub Copilot, y la reparación automática de vulnerabilidades, un campo muy ambicioso pero cuyos resultados aún no son lo suficientemente fiables como para aplicarlos en un entorno de producción crítico sin supervisión."
+    *   (Jonna): "Y es precisamente en la brecha entre estos dos mundos donde se sitúa nuestra tesis. Detectamos una oportunidad clara: un espacio intermedio enfocado en la asistencia inteligente. Nuestro trabajo no busca reemplazar al desarrollador con una reparación automática arriesgada. Busca empoderarlo."
+    *   (Marco): "Nuestra contribución, por tanto, es un sistema que actúa como un experto en seguridad virtual dentro del pipeline. Aprovecha el poder de la IA para traducir las alertas 'ruidosas' en sugerencias de mitigación claras, contextualizadas y, sobre todo, accionables, manteniendo siempre el control final en manos del desarrollador."
+
+--- SLIDE 4: Nuestra Misión y Plan de Acción ---
+
+Título: Nuestra Misión: Objetivos del Proyecto
+
+Contenido:
+    *   Objetivo General:
+        > Diseñar, implementar y evaluar un prototipo que integra IA en un pipeline CI/CD para detectar vulnerabilidades en microservicios Java y generar sugerencias de mitigación contextualizadas.
+
+    *   Objetivos Específicos (El "Cómo"):
+        *   1. Establecer la Base: Integrar una herramienta SAST (SonarQube) en un pipeline CI/CD para la detección inicial.
+        *   2. Integrar la Inteligencia: Conectar el pipeline con un modelo de IA para analizar el código vulnerable.
+        *   3. Automatizar el Flujo: Orquestar el proceso completo, desde el `commit` hasta el análisis con IA.
+        *   4. Generar Reportes Accionables: Presentar los hallazgos de la IA en informes HTML claros para el desarrollador.
+        *   5. Validar la Eficacia: Evaluar la calidad y precisión de las sugerencias de la IA y medir el impacto en el pipeline.
+
+    *   Importante: Fuera de Alcance
+        *   El sistema asiste al desarrollador, no implementa la corrección automática de código.
+
+Notas del Orador (Guion):
+    *   (Marco): "Teniendo clara la oportunidad, definimos una misión muy concreta para nuestro trabajo. Nuestro objetivo general fue diseñar, implementar y, sobre todo, evaluar un prototipo funcional que integre Inteligencia Artificial en un pipeline de CI/CD. El propósito: no solo detectar vulnerabilidades en código Java, sino generar sugerencias de mitigación que sean realmente útiles."
+    *   (Jonna): "Para materializar esta visión, establecimos cinco objetivos específicos, que fueron nuestra hoja de ruta. Primero, creamos una línea base, integrando una herramienta estándar como SonarQube. Segundo, y el núcleo de la tesis, conectamos el pipeline a un modelo de IA capaz de razonar sobre el código. Tercero, automatizamos todo el flujo para que se active con cada cambio."
+    *   (Marco): "Cuarto, nos aseguramos de que los resultados fueran útiles, generando reportes claros y accionables. Y finalmente, el quinto y más importante, validamos la eficacia de todo el sistema: ¿Son buenas las sugerencias de la IA? ¿Aportan valor real? Es crucial destacar que nuestro alcance se centró en la asistencia inteligente; dejamos explícitamente fuera la corrección automática para garantizar el control y la seguridad, empoderando al desarrollador, no reemplazándolo."
+
+--- SLIDE 5: Arquitectura del Sistema ---
+
+Título: Arquitectura: Los Componentes de Nuestro Asistente de IA
+
+Contenido:
+    *   [IMAGEN PRINCIPAL: Usar el diagrama de `contenido/imagenes/4_componentes.pdf`]
+    *   Componentes Clave:
+        *   Orquestador (Jenkins): El cerebro que dirige todo el proceso, definido como "Pipeline as Code" en un `Jenkinsfile`.
+        *   Entorno Reproducible (Docker): Contenedores que garantizan que el pipeline se ejecute siempre en un entorno idéntico y aislado.
+        *   Módulo de Análisis de IA (Python): Nuestro script personalizado que se comunica con los modelos de IA. Es el núcleo de la innovación.
+        *   El "Experto" Virtual (LLM vía OpenRouter): Un modelo de lenguaje grande que analiza el código y genera las sugerencias. Usamos OpenRouter para poder cambiar de modelo (GPT, Gemini, etc.) con flexibilidad.
+        *   Salida (Reporte HTML): El artefacto final, diseñado para ser claro y accionable para el desarrollador.
+
+Notas del Orador (Guion):
+    *   (Marco): "Para construir nuestra solución, diseñamos una arquitectura modular, como pueden ver en el diagrama. En el centro de todo está Jenkins, que actúa como el orquestador principal. Toda la lógica del pipeline está definida como código en un `Jenkinsfile`."
+    *   (Jonna): "Para garantizar la reproducibilidad y evitar el clásico 'en mi máquina funciona', todo el entorno se ejecuta dentro de contenedores Docker. El componente clave, el núcleo de nuestra innovación, es un módulo que desarrollamos en Python. Este módulo es el responsable de comunicarse con un modelo de lenguaje grande, al que llamamos nuestro 'Experto Virtual'."
+    *   (Marco): "Una decisión estratégica fue usar el servicio de OpenRouter, que nos da la flexibilidad de conectarnos a diferentes modelos de IA como GPT o Gemini sin cambiar nuestro código. Finalmente, el sistema produce un reporte en formato HTML, que es el resultado tangible que recibe el desarrollador."
+
+--- SLIDE 6: El Pipeline Inteligente en Acción ---
+
+Título: El Flujo de Trabajo: Un Análisis Paso a Paso
+
+Contenido:
+    *   [IMAGEN PRINCIPAL: Usar el diagrama de `contenido/imagenes/4_secuencia.pdf`]
+    *   El Proceso Automatizado:
+        1.  Commit: El desarrollador sube su código a Git.
+        2.  Build & Test: Jenkins compila el código y ejecuta pruebas unitarias.
+        3.  Análisis SAST: Se realiza un primer escaneo con herramientas tradicionales (SpotBugs, OWASP).
+        4.  Análisis con IA (El Paso Clave):
+            *   Nuestro script de Python toma los resultados del SAST.
+            *   Prepara un "prompt" detallado para cada vulnerabilidad.
+            *   Envía el código y el prompt al modelo de IA.
+            *   Recibe y procesa la sugerencia de mitigación.
+        5.  Quality Gate: El pipeline comprueba si hay vulnerabilidades críticas. Si las hay, detiene el proceso.
+        6.  Reporte: Se genera y publica el informe HTML con los hallazgos y las sugerencias de la IA.
+
+Notas del Orador (Guion):
+    *   (Jonna): "Ahora veamos cómo estos componentes trabajan juntos en un flujo paso a paso. Todo comienza cuando un desarrollador hace un 'commit'. Jenkins detecta el cambio y automáticamente inicia el pipeline, compilando el código y pasando las pruebas básicas."
+    *   (Marco): "A continuación, se realiza un análisis de seguridad estático tradicional. Y aquí viene el paso clave de nuestro trabajo: el análisis con IA. Nuestro script toma las alertas iniciales, prepara una consulta muy específica para el modelo de IA, incluyendo el fragmento de código, y le pide una sugerencia de mitigación."
+    *   (Jonna): "Una vez que la IA responde, nuestro sistema implementa un 'Quality Gate' o barrera de calidad. Si se detecta una vulnerabilidad crítica, el pipeline se detiene en seco, impidiendo que el código inseguro avance. Si todo está en orden, el paso final es generar el reporte HTML con todos los hallazgos y las valiosas sugerencias de la IA, dejándolo listo para que el desarrollador lo revise."
+
+--- SLIDE 7: Validación Experimental: La IA a Prueba ---
+
+Título: Validación Experimental: Poniendo a Prueba la IA
+
+Contenido:
+    *   Caso de Estudio:
+        *   Se analizó un microservicio Java con 13 vulnerabilidades implantadas.
+        *   Se comparó el rendimiento de 4 modelos de IA contra herramientas estándar de la industria (SonarQube y Snyk).
+
+    *   Resultados de Detección (El Hallazgo Clave):
+        *   SonarQube (SAST): Detectó 3 de 12 vulnerabilidades en el código.
+        *   Snyk (SAST + SCA): Detectó 11 de 13 vulnerabilidades en total.
+        *   Modelos de IA: Todos los modelos de IA detectaron el 100% de las 13 vulnerabilidades, superando la cobertura de las herramientas de referencia.
+
+    *   Más Allá de la Detección (Análisis Cualitativo):
+        *   La IA no solo detectó, sino que ofreció sugerencias de corrección de alta calidad, explicando el "porqué" del fallo.
+        *   Proporcionó código de ejemplo seguro y aplicable, a diferencia de las alertas genéricas de otras herramientas.
+        *   El modelo Gemini 2.0 Flash demostró ser el más equilibrado en velocidad, coste y calidad de la respuesta.
+
+    *   Prueba del Pipeline:
+        *   [IMAGEN: Usar `contenido/imagenes/4_pipeline_fail.png`]
+        *   El pipeline integrado con la IA detectó y bloqueó automáticamente el código inseguro gracias al Quality Gate.
+
+Notas del Orador (Guion):
+    *   (Jonna): "Una vez construido el prototipo, la pregunta era: ¿realmente funciona? Para responderla, diseñamos un experimento riguroso. Creamos un microservicio Java al que le introdujimos deliberadamente 13 vulnerabilidades conocidas y lo analizamos con 4 modelos de IA distintos y dos herramientas de referencia: SonarQube y Snyk."
+    *   (Marco): "Los resultados fueron reveladores. Como ven, SonarQube detectó solo una fracción de los problemas. Snyk tuvo un rendimiento muy robusto, encontrando 11 de las 13 vulnerabilidades. Sin embargo, el hallazgo clave fue que todos los modelos de IA que probamos alcanzaron una tasa de detección del 100%, identificando la totalidad de las 13 vulnerabilidades."
+    *   (Jonna): "Pero el verdadero valor de la IA no está solo en encontrar fallos, sino en cómo ayuda a solucionarlos. A diferencia de las alertas genéricas, la IA nos proporcionó explicaciones detalladas y, lo más importante, ejemplos de código corregido que un desarrollador puede aplicar directamente. De todos los modelos, Gemini 2.0 Flash resultó ser el más equilibrado para un entorno de CI/CD."
+    *   (Marco): "Finalmente, pusimos a prueba el pipeline completo. Como pueden ver en la captura, al intentar desplegar el código con vulnerabilidades, nuestro Quality Gate, alimentado por la IA, funcionó a la perfección: detuvo el pipeline y bloqueó el despliegue, demostrando que el sistema es un mecanismo de defensa preventivo y eficaz."
+
+--- SLIDE 8: Conclusiones ---
+
+Título: Conclusiones: Hacia un DevSecOps más Inteligente
+
+Contenido:
+    *   Hipótesis Validada: Se demostró con éxito que la integración de IA en un pipeline CI/CD es viable y mejora significativamente el proceso de seguridad.
+    *   El Valor Real es la Asistencia: La principal contribución no es solo detectar, sino acelerar la corrección a través de sugerencias accionables.
+    *   Empoderamiento del Desarrollador: El sistema actúa como un "experto de seguridad virtual", reduciendo la carga cognitiva y la fatiga por alertas.
+    *   Un Complemento, no un Reemplazo: La IA se posiciona como una capa de asistencia y aprendizaje que enriquece a las herramientas SAST/SCA existentes.
+
+Notas del Orador (Guion):
+    *   (Marco): "Llegando al final de nuestra presentación, queremos sintetizar las conclusiones clave de nuestro trabajo. Primero, y más importante, hemos validado nuestra hipótesis central: la integración de Inteligencia Artificial en el pipeline no solo es posible, sino que aporta un valor medible al proceso de DevSecOps."
+    *   (Jonna): "Descubrimos que el valor más significativo de la IA no reside en superar a otras herramientas en detección, sino en lo que ocurre después. Su capacidad para generar sugerencias de corrección claras y con contexto acelera drásticamente la fase de mitigación."
+    *   (Marco): "Esto nos lleva a nuestra conclusión principal: nuestro sistema empodera al desarrollador. Actúa como un asistente experto que reduce la carga de trabajo, traduce alertas complejas en soluciones prácticas y, en última instancia, fortalece la seguridad sin sacrificar la agilidad."
+    *   (Jonna): "Por tanto, vemos la IA como una nueva capa fundamental en la estrategia de seguridad. No viene a reemplazar a herramientas como SonarQube o Snyk, sino a complementarlas, actuando como una capa de asistencia inteligente que hace que todo el ecosistema sea más eficiente."
+
+--- SLIDE 9: Trabajo Futuro ---
+
+Título: Trabajo Futuro: Los Próximos Pasos
+
+Contenido:
+    *   Análisis Interactivo (IAST/DAST): Integrar análisis en tiempo de ejecución para dar a la IA un contexto aún más profundo.
+    *   Integración con Gestores de Incidencias: Crear automáticamente tickets en Jira o GitLab con los hallazgos y sugerencias de la IA.
+    *   "Fine-Tuning" de Modelos de IA: Entrenar un modelo de IA especializado para obtener un sistema aún más rápido, preciso y económico.
+    *   Soporte Multi-Lenguaje: Extender la arquitectura modular para analizar otros lenguajes como Python, Go o JavaScript.
+    *   Mecanismo de Retroalimentación: Permitir que los desarrolladores califiquen las sugerencias para que el sistema pueda aprender y mejorar continuamente.
+
+Notas del Orador (Guion):
+    *   (Marco): "Finalmente, este proyecto abre la puerta a futuras líneas de investigación muy interesantes. A corto plazo, podríamos integrar análisis dinámico para dar a la IA un contexto de ejecución, o conectar el sistema con herramientas como Jira para automatizar la creación de incidencias."
+    *   (Jonna): "A más largo plazo, una línea de gran valor sería realizar un 'fine-tuning' de un modelo de código abierto, entrenándolo específicamente para esta tarea, lo que podría darnos un sistema aún más preciso y eficiente. También, la arquitectura modular que hemos creado facilita la expansión a otros lenguajes de programación."
+    *   (Marco): "Y quizás lo más emocionante, es la posibilidad de añadir un bucle de retroalimentación, donde el sistema aprenda de las calificaciones de los desarrolladores, mejorando con cada ciclo. El potencial para crear un ecosistema de seguridad verdaderamente inteligente y adaptativo es enorme."
+
+--- SLIDE 10: Preguntas ---
+
+Título: ¿Preguntas?
+
+Contenido:
+    *   (Una diapositiva limpia, quizás con sus nombres y correos de contacto)
+    *   Marco [Apellido] - marco.email@example.com
+    *   Jonna [Apellido] - jonna.email@example.com
+    *   (Logo de la UNIR)
+
+Notas del Orador (Guion):
+    *   (Marco): "Con esto concluimos nuestra presentación. Les agradecemos enormemente su tiempo y atención."
+    *   (Jonna): "Quedamos a su entera disposición para responder cualquier pregunta que puedan tener."
