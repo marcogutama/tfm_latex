@@ -1,0 +1,64 @@
+#### Posibles Preguntas del Jurado y Estrategias para Responder ####
+
+
+#### Categoría 1: Sobre la Motivación y el Problema ####
+
+**Pregunta 1: "Su evaluación muestra que herramientas comerciales como Snyk ya tienen una tasa de detección muy alta. ¿Realmente justifica el esfuerzo de su proyecto la detección de esas 1-2 vulnerabilidades extra? ¿Cuál es el valor añadido real?"**
+
+*   Estrategia para responder: No se pongan a la defensiva. Acepten la premisa (Snyk es bueno) y luego pivoten hacia su diferenciador clave: la asistencia en la mitigación, no solo la detección.
+*   Puntos Clave para la Respuesta:
+    *   "Es una excelente observación. De hecho, nuestro objetivo no era crear un detector superior, sino abordar el problema que viene *después* de la detección: la **carga cognitiva del desarrollador** y el **tiempo de remediación**."
+    *   "Mientras que Snyk te dice 'qué' está mal, nuestro sistema, gracias a la IA generativa, se enfoca en el **'porqué'** y el **'cómo' solucionarlo**. Proporciona explicaciones detalladas y fragmentos de código contextualizados."
+    *   "El valor añadido no es solo encontrar 1 o 2 fallos más, sino **reducir drásticamente el tiempo** que un desarrollador tarda en entender y arreglar *todos* los fallos. Nuestro sistema actúa como un acelerador del aprendizaje y la corrección, un rol que las herramientas tradicionales no cubren de la misma manera."
+
+---
+
+**Pregunta 2: "Hablan de 'fatiga por alertas'. ¿No corren el riesgo de que los desarrolladores también desarrollen 'fatiga por IA', ignorando las sugerencias si no son perfectas?"**
+
+*   Estrategia para responder: Demuestren que han pensado en los factores humanos y en la usabilidad de su solución.
+*   Puntos Clave para la Respuesta:
+    *   "Es un riesgo real y una consideración de usabilidad muy importante. Precisamente por eso, nuestro enfoque no es la corrección automática, que podría generar desconfianza."
+    *   "La clave para evitar la 'fatiga por IA' es la **calidad y relevancia** de las sugerencias. En nuestra evaluación cualitativa, nos centramos en la accionabilidad y la claridad de las explicaciones. Un desarrollador es más propenso a confiar en una herramienta que le enseña y le ayuda, en lugar de una que simplemente le asigna tareas."
+    *   "Además, como mencionamos en el trabajo futuro, un **mecanismo de retroalimentación** donde los desarrolladores puedan calificar las sugerencias sería el siguiente paso lógico para que el sistema aprenda y mejore continuamente, asegurando que su utilidad se mantenga alta."
+
+
+#### Categoría 2: Sobre el Diseño y las Decisiones Técnicas ####
+
+**Pregunta 3: "Eligieron Jenkins, que es una herramienta muy robusta pero considerada por algunos más tradicional. ¿Por qué no utilizar una plataforma más moderna y nativa de Git, como GitHub Actions o GitLab CI/CD?"**
+
+*   Estrategia para responder: Justifiquen su elección basándose en los requisitos de la tesis (control, flexibilidad, didáctica) y no en una simple preferencia.
+*   Puntos Clave para la Respuesta:
+    *   "Evaluamos varias opciones, incluyendo GitHub Actions. Para el contexto de esta tesis, Jenkins nos ofrecía varias ventajas clave. Primero, un **control total sobre el entorno de ejecución** gracias a su naturaleza auto-alojada, lo que era fundamental para nuestra arquitectura Docker-out-of-Docker y para realizar una evaluación controlada."
+    *   "Segundo, la **neutralidad de la plataforma**. Queríamos diseñar un módulo de análisis en Python que fuera agnóstico al orquestador. Jenkins, al ser un integrador universal, nos permitió demostrar que nuestro script podría ser invocado desde cualquier sistema de CI/CD, lo cual era un objetivo de diseño importante."
+    *   "Finalmente, su madurez y su sistema de plugins nos dieron una base muy estable sobre la cual construir nuestra innovación, permitiéndonos centrarnos en el módulo de IA, que es el verdadero núcleo del proyecto."
+
+---
+
+**Pregunta 4: "Su sistema depende de una llamada a una API externa (OpenRouter). ¿Qué implicaciones tiene esto en términos de latencia, coste y seguridad de los datos? ¿No es un punto único de fallo?"**
+
+*   Estrategia para responder: Demuestren que han analizado los pros y los contras de su decisión y que han pensado en los riesgos.
+*   Puntos Clave para la Respuesta:
+    *   "Somos conscientes de las implicaciones. De hecho, nuestro plan inicial era usar modelos locales con Ollama, pero como explicamos en la sección de 'Desafíos', el coste en infraestructura y la latencia eran prohibitivos para un entorno de CI/CD ágil."
+    *   **Latencia y Coste:** "Elegimos OpenRouter precisamente para mitigar esto. Nos permitió evaluar el balance coste-rendimiento de múltiples modelos. Nuestro análisis cuantitativo demostró que con un modelo como Gemini Flash, el impacto en el tiempo del pipeline es mínimo (menos de 2 minutos) y el coste por análisis es de fracciones de céntimo, lo que es viable."
+    *   **Seguridad:** "Este es un punto crítico. Investigamos las políticas de OpenRouter, que por defecto no almacenan ni entrenan con los datos de las peticiones. Además, la plataforma permite excluir a proveedores que sí lo hagan. Para una empresa con datos ultra-sensibles, la solución sería un modelo auto-alojado, pero para la gran mayoría de los casos, este enfoque ofrece un balance pragmático entre seguridad y acceso a la mejor tecnología."
+
+
+#### Categoría 3: Sobre la Evaluación y los Resultados ####
+
+**Pregunta 5: "Su evaluación se basa en un microservicio con 13 vulnerabilidades conocidas. ¿Cómo pueden asegurar que estos resultados son generalizables a un proyecto real, con una base de código mucho más grande y compleja?"**
+
+*   Estrategia para responder: Sean honestos sobre el alcance de su evaluación, pero defiendan la validez de sus conclusiones dentro de ese alcance.
+*   Puntos Clave para la Respuesta:
+    *   "Esa es una limitación inherente a cualquier evaluación en un contexto académico. Nuestro objetivo con el microservicio de prueba no era replicar la escala de un sistema de producción, sino crear un **entorno controlado y reproducible** para poder comparar de forma justa el rendimiento de las distintas herramientas sobre un conjunto diverso de vulnerabilidades del OWASP Top 10."
+    *   "Si bien la escala es diferente, los **tipos de vulnerabilidades** (Inyección SQL, XSS, etc.) son universales. La capacidad de la IA para entender el contexto de un fragmento de código y sugerir una corrección idiomática es una habilidad que se transfiere a bases de código más grandes."
+    *   "Consideramos nuestros resultados como una **prueba de concepto muy sólida** que demuestra el potencial del enfoque. El siguiente paso, como parte de un trabajo futuro, sería precisamente validar esta solución en un entorno industrial a gran escala."
+
+---
+
+**Pregunta 6: "En su análisis cualitativo, ustedes mismos evaluaron la calidad de las sugerencias de la IA. ¿No introduce esto un sesgo del investigador? ¿Cómo se podría haber hecho una evaluación más objetiva?"**
+
+*   Estrategia para responder: Reconozcan el posible sesgo y describan cómo lo mitigaron, o cómo lo harían en un estudio futuro.
+*   Puntos Clave para la Respuesta:
+    *   "Reconocemos que la evaluación cualitativa por parte de los propios investigadores puede introducir un sesgo. Para mitigarlo, establecimos criterios muy claros y objetivos antes de la evaluación, como la **seguridad de la solución propuesta** (¿resuelve el fallo sin introducir otros?) y su **aplicabilidad directa**."
+    *   "Por ejemplo, en el caso del Path Traversal, la diferencia entre una solución ingenua y una robusta es objetivamente demostrable, no una simple opinión."
+    *   "Sin embargo, para un estudio futuro, una evaluación más rigurosa implicaría un **estudio con usuarios**. Se podría presentar a un grupo de desarrolladores (sin decirles qué herramienta generó qué sugerencia) los resultados de Snyk y de la IA, y medir cuál de las dos les permite corregir la vulnerabilidad más rápido y con mayor confianza. Ese sería el estándar de oro para validar la usabilidad."
